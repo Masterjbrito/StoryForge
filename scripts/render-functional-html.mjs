@@ -10,6 +10,7 @@ function esc(s) {
 
 function inline(s) {
   let out = esc(s);
+  out = out.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<figure class="shot"><img src="$2" alt="$1" /><figcaption>$1</figcaption></figure>');
   out = out.replace(/`([^`]+)`/g, '<code>$1</code>');
   out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   out = out.replace(/\*([^*]+)\*/g, '<em>$1</em>');
@@ -124,13 +125,13 @@ const html = `<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>StoryForge - Especificacao Funcional</title>
 <style>
-:root { --ink:#0f172a; --muted:#475569; --line:#cbd5e1; --accent:#0b2a4a; --soft:#f8fafc; }
+:root { --ink:#0f172a; --muted:#475569; --line:#cbd5e1; --accent:#0b2a4a; --soft:#f8fafc; --brand:#0e7490; }
 * { box-sizing: border-box; }
 body { margin:0; font-family: "Segoe UI", Arial, sans-serif; color:var(--ink); background:#e2e8f0; }
 .page { max-width: 1024px; margin: 28px auto; background:#fff; padding: 44px 52px; border-radius: 12px; box-shadow: 0 10px 40px rgba(15,23,42,.15); }
 h1,h2,h3,h4 { page-break-after: avoid; break-after: avoid-page; margin: 22px 0 10px; }
 h1 { margin-top:0; font-size: 30px; color: var(--accent); }
-h2 { font-size:22px; border-top:1px solid var(--line); padding-top:14px; }
+h2 { font-size:22px; border-top:1px solid var(--line); padding-top:14px; color:#0b3b66; }
 h3 { font-size:17px; color:#1e293b; }
 p,li,td,th { font-size: 13px; line-height: 1.5; }
 p { margin: 8px 0; color:#1e293b; }
@@ -141,12 +142,16 @@ table { width:100%; border-collapse: collapse; margin: 12px 0 16px; page-break-i
 th,td { border:1px solid var(--line); padding:8px 9px; vertical-align: top; }
 th { background:var(--soft); text-align:left; }
 hr { border:none; border-top:1px solid var(--line); margin:16px 0; }
+.shot { margin: 14px 0 22px; page-break-inside: avoid; break-inside: avoid; }
+.shot img { width: 100%; border:1px solid #cbd5e1; border-radius:10px; display:block; box-shadow:0 8px 26px rgba(2,6,23,.12); }
+.shot figcaption { font-size: 12px; color: var(--muted); margin-top: 8px; text-align: center; }
 @media print {
   @page { size: A4; margin: 16mm 12mm 16mm 12mm; }
   body { background:#fff; }
   .page { margin:0; max-width:none; box-shadow:none; border-radius:0; padding:0; }
-  table, pre, blockquote, ul, ol { break-inside: avoid; page-break-inside: avoid; }
+  table, pre, blockquote, ul, ol, .shot { break-inside: avoid; page-break-inside: avoid; }
   h1,h2,h3 { break-after: avoid-page; }
+  .shot img { max-height: 232mm; object-fit: contain; }
 }
 </style>
 </head>
