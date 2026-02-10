@@ -132,6 +132,27 @@ export function AgentProvider({ children }: { children: ReactNode }) {
   const foundryEndpoint = String(env.VITE_FOUNDRY_ENDPOINT ?? '');
   const foundryApiKey = String(env.VITE_FOUNDRY_API_KEY ?? '');
   const foundryProjectId = env.VITE_FOUNDRY_PROJECT_ID ? String(env.VITE_FOUNDRY_PROJECT_ID) : undefined;
+  const foundryMode = String(env.VITE_FOUNDRY_MODE ?? 'single-endpoint').toLowerCase() === 'agent-id'
+    ? 'agent-id'
+    : 'single-endpoint';
+  const foundryAuthMode = String(env.VITE_FOUNDRY_AUTH_MODE ?? 'bearer').toLowerCase() === 'api-key'
+    ? 'api-key'
+    : 'bearer';
+  const foundryApiKeyHeader = String(env.VITE_FOUNDRY_API_KEY_HEADER ?? 'api-key');
+  const foundryAgentUrlTemplate = env.VITE_FOUNDRY_AGENT_URL_TEMPLATE
+    ? String(env.VITE_FOUNDRY_AGENT_URL_TEMPLATE)
+    : undefined;
+  const foundryAgentIds = {
+    'context-ingestor': env.VITE_FOUNDRY_AGENT_CONTEXT_INGESTOR_ID ? String(env.VITE_FOUNDRY_AGENT_CONTEXT_INGESTOR_ID) : undefined,
+    'questionnaire-discovery': env.VITE_FOUNDRY_AGENT_QUESTIONNAIRE_DISCOVERY_ID ? String(env.VITE_FOUNDRY_AGENT_QUESTIONNAIRE_DISCOVERY_ID) : undefined,
+    'requirements-generator': env.VITE_FOUNDRY_AGENT_REQUIREMENTS_GENERATOR_ID ? String(env.VITE_FOUNDRY_AGENT_REQUIREMENTS_GENERATOR_ID) : undefined,
+    'acceptance-criteria': env.VITE_FOUNDRY_AGENT_ACCEPTANCE_CRITERIA_ID ? String(env.VITE_FOUNDRY_AGENT_ACCEPTANCE_CRITERIA_ID) : undefined,
+    'test-design': env.VITE_FOUNDRY_AGENT_TEST_DESIGN_ID ? String(env.VITE_FOUNDRY_AGENT_TEST_DESIGN_ID) : undefined,
+    'quality-gate': env.VITE_FOUNDRY_AGENT_QUALITY_GATE_ID ? String(env.VITE_FOUNDRY_AGENT_QUALITY_GATE_ID) : undefined,
+    'versioning-diff': env.VITE_FOUNDRY_AGENT_VERSIONING_DIFF_ID ? String(env.VITE_FOUNDRY_AGENT_VERSIONING_DIFF_ID) : undefined,
+    export: env.VITE_FOUNDRY_AGENT_EXPORT_ID ? String(env.VITE_FOUNDRY_AGENT_EXPORT_ID) : undefined,
+    'audit-logging': env.VITE_FOUNDRY_AGENT_AUDIT_LOGGING_ID ? String(env.VITE_FOUNDRY_AGENT_AUDIT_LOGGING_ID) : undefined,
+  } as const;
   const initInvalid = configuredProvider === 'foundry' && (!foundryEndpoint || !foundryApiKey);
   const [provider, setProvider] = useState(
     configuredProvider === 'foundry' ? 'Microsoft Foundry' : 'Mock (Development)'
@@ -154,6 +175,11 @@ export function AgentProvider({ children }: { children: ReactNode }) {
         endpoint: foundryEndpoint,
         apiKey: foundryApiKey,
         projectId: foundryProjectId,
+        mode: foundryMode,
+        authMode: foundryAuthMode,
+        apiKeyHeader: foundryApiKeyHeader,
+        agentUrlTemplate: foundryAgentUrlTemplate,
+        agentIds: foundryAgentIds,
       });
 
       const safeService = new FallbackAgentService(foundry, mock, (error) => {
@@ -172,7 +198,19 @@ export function AgentProvider({ children }: { children: ReactNode }) {
       console.error('Foundry initialization failed. Using mock.', error);
       return { agentService: mock, provider: 'Mock (Fallback)' };
     }
-  }, [configuredProvider, foundryApiKey, foundryEndpoint, foundryProjectId, initInvalid, provider]);
+  }, [
+    configuredProvider,
+    foundryApiKey,
+    foundryEndpoint,
+    foundryProjectId,
+    foundryMode,
+    foundryAuthMode,
+    foundryApiKeyHeader,
+    foundryAgentUrlTemplate,
+    foundryAgentIds,
+    initInvalid,
+    provider,
+  ]);
 
   useEffect(() => {
     if (!initInvalid) return;

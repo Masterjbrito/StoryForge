@@ -17,6 +17,15 @@ function inline(s) {
   return out;
 }
 
+function slugify(s) {
+  return s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
 function renderTable(lines, i) {
   const rows = [];
   while (i < lines.length && /^\|.*\|\s*$/.test(lines[i])) {
@@ -39,6 +48,7 @@ function mdToHtml(md) {
   let html = '';
   let inCode = false;
   let code = [];
+  const toc = [];
 
   while (i < lines.length) {
     const line = lines[i];
@@ -76,7 +86,12 @@ function mdToHtml(md) {
     const h = line.match(/^(#{1,6})\s+(.*)$/);
     if (h) {
       const lvl = h[1].length;
-      html += `<h${lvl}>${inline(h[2])}</h${lvl}>`;
+      const text = h[2].trim();
+      const id = slugify(text);
+      if (lvl <= 3) {
+        toc.push({ level: lvl, text, id });
+      }
+      html += `<h${lvl} id="${id}">${inline(text)}</h${lvl}>`;
       i += 1;
       continue;
     }
@@ -109,14 +124,17 @@ function mdToHtml(md) {
     html += `<p>${inline(para.join(' '))}</p>`;
   }
 
-  return html;
+  return { html, toc };
 }
 
 const root = process.cwd();
 const mdPath = path.join(root, 'docs', 'FUNCTIONAL_SPECIFICATION.md');
 const outPath = path.join(root, 'docs', 'FUNCTIONAL_SPECIFICATION.html');
 const md = fs.readFileSync(mdPath, 'utf8');
-const body = mdToHtml(md);
+const { html: body, toc } = mdToHtml(md);
+const tocHtml = `<nav class="toc"><h2>Indice</h2><ul>${toc
+  .map((x) => `<li class="lv${x.level}"><a href="#${x.id}">${esc(x.text)}</a></li>`)
+  .join('')}</ul></nav>`;
 
 const html = `<!doctype html>
 <html lang="pt-PT">
@@ -128,7 +146,17 @@ const html = `<!doctype html>
 :root { --ink:#0f172a; --muted:#475569; --line:#cbd5e1; --accent:#0b2a4a; --soft:#f8fafc; --brand:#0e7490; }
 * { box-sizing: border-box; }
 body { margin:0; font-family: "Segoe UI", Arial, sans-serif; color:var(--ink); background:#e2e8f0; }
-.page { max-width: 1024px; margin: 28px auto; background:#fff; padding: 44px 52px; border-radius: 12px; box-shadow: 0 10px 40px rgba(15,23,42,.15); }
+.layout { max-width: 1360px; margin: 28px auto; display:grid; grid-template-columns: 300px minmax(0,1fr); gap:20px; }
+.toc { background:#fff; border-radius:12px; box-shadow:0 10px 40px rgba(15,23,42,.12); padding:20px; height: fit-content; position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow:auto; }
+.toc h2 { margin:0 0 12px; border:none; padding:0; font-size:18px; color:#0b3b66; }
+.toc ul { list-style:none; margin:0; padding:0; }
+.toc li { margin:6px 0; }
+.toc li.lv1 a { font-weight:700; }
+.toc li.lv2 { padding-left:10px; }
+.toc li.lv3 { padding-left:20px; }
+.toc a { text-decoration:none; color:#1e293b; font-size:13px; }
+.toc a:hover { color:#0e7490; text-decoration:underline; }
+.page { background:#fff; padding: 44px 52px; border-radius: 12px; box-shadow: 0 10px 40px rgba(15,23,42,.15); }
 h1,h2,h3,h4 { page-break-after: avoid; break-after: avoid-page; margin: 22px 0 10px; }
 h1 { margin-top:0; font-size: 30px; color: var(--accent); }
 h2 { font-size:22px; border-top:1px solid var(--line); padding-top:14px; color:#0b3b66; }
@@ -148,6 +176,8 @@ hr { border:none; border-top:1px solid var(--line); margin:16px 0; }
 @media print {
   @page { size: A4; margin: 16mm 12mm 16mm 12mm; }
   body { background:#fff; }
+  .layout { display:block; max-width:none; margin:0; }
+  .toc { display:none; }
   .page { margin:0; max-width:none; box-shadow:none; border-radius:0; padding:0; }
   table, pre, blockquote, ul, ol, .shot { break-inside: avoid; page-break-inside: avoid; }
   h1,h2,h3 { break-after: avoid-page; }
@@ -156,7 +186,10 @@ hr { border:none; border-top:1px solid var(--line); margin:16px 0; }
 </style>
 </head>
 <body>
-  <main class="page">${body}</main>
+  <div class="layout">
+    ${tocHtml}
+    <main class="page">${body}</main>
+  </div>
 </body>
 </html>`;
 
