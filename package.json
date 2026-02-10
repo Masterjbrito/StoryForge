@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "vite"
+    "dev": "vite",
+    "foundry:login": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/foundry-login.ps1"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",
