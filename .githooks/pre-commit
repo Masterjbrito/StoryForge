@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+set -e
+
+if git diff --cached --name-only | grep -q "^docs/FUNCTIONAL_SPECIFICATION.md$"; then
+  echo "[pre-commit] Updating docs outputs and history..."
+  powershell -NoProfile -ExecutionPolicy Bypass -File scripts/update-docs.ps1
+  git add docs/FUNCTIONAL_SPECIFICATION.html docs/FUNCTIONAL_SPECIFICATION.pdf docs/StoryForge_Executive_Presentation.pdf docs/history/HISTORY_INDEX.md docs/history
+fi
