@@ -4,6 +4,8 @@ import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
 import { Separator } from '../ui/separator';
+import { useAgent } from '@/contexts/AgentContext';
+import { useAudit } from '@/contexts/AuditContext';
 
 type View = 
   | 'dashboard' 
@@ -20,6 +22,38 @@ interface IntegrationsProps {
 }
 
 export function Integrations({ onNavigate }: IntegrationsProps = {}) {
+  const { agentService } = useAgent();
+  const { logAction } = useAudit();
+
+  const handleSync = async (integrationName: string) => {
+    try {
+      const result = await agentService.exportToplatform([], integrationName, 'SYNC-CHECK');
+      logAction({
+        action: 'Sincronizacao de integracao',
+        actionType: 'integration',
+        user: 'Susana Gamito',
+        userInitials: 'SG',
+        project: null,
+        projectName: integrationName,
+        details: `Sync concluido (${result.data.duration})`,
+        status: 'success',
+      });
+      window.alert(`Sincronizacao concluida para ${integrationName}.`);
+    } catch (error) {
+      logAction({
+        action: 'Falha na sincronizacao',
+        actionType: 'integration',
+        user: 'Susana Gamito',
+        userInitials: 'SG',
+        project: null,
+        projectName: integrationName,
+        details: error instanceof Error ? error.message : 'Erro desconhecido',
+        status: 'error',
+      });
+      window.alert(`Falha na sincronizacao de ${integrationName}.`);
+    }
+  };
+
   const integrations = [
     { 
       name: 'Jira Cloud', 
@@ -289,7 +323,12 @@ export function Integrations({ onNavigate }: IntegrationsProps = {}) {
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="sm" className="gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="gap-2"
+                        onClick={() => void handleSync(integration.name)}
+                      >
                         <RefreshCw className="w-4 h-4" />
                         Sincronizar Agora
                       </Button>

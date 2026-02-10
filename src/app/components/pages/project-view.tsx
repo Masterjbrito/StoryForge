@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
   ArrowLeft,
@@ -37,6 +37,8 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import { Progress } from '../ui/progress';
+import { useAgent } from '@/contexts/AgentContext';
+import { useAudit } from '@/contexts/AuditContext';
 
 type View = 
   | 'dashboard' 
@@ -53,7 +55,7 @@ interface ProjectViewProps {
   projectId?: number | null;
 }
 
-// Dados completos do projeto (em produção viria de API)
+// Dados completos do projeto (em produÃ§Ã£o viria de API)
 const projectsData: Record<number, any> = {
   999: {
     id: 999,
@@ -66,13 +68,13 @@ const projectsData: Record<number, any> = {
     createdAt: new Date(),
     lastExport: new Date(),
     createdBy: 'Susana Gamito',
-    description: 'Sistema completo de pagamentos móveis MB Way gerado pelo IA Assistant com rigor bancário, incluindo transferências instantâneas, autenticação PSD2 e compliance total.',
+    description: 'Sistema completo de pagamentos mÃ³veis MB Way gerado pelo IA Assistant com rigor bancÃ¡rio, incluindo transferÃªncias instantÃ¢neas, autenticaÃ§Ã£o PSD2 e compliance total.',
     objectives: [
-      'Implementar transferências instantâneas P2P via número de telemóvel',
+      'Implementar transferÃªncias instantÃ¢neas P2P via nÃºmero de telemÃ³vel',
       'Integrar com rede SIBS para processamento de pagamentos',
-      'Garantir conformidade total com PSD2 e autenticação forte (SCA)',
-      'Criar experiência mobile nativa iOS e Android',
-      'Implementar sistema de limites configuráveis por perfil'
+      'Garantir conformidade total com PSD2 e autenticaÃ§Ã£o forte (SCA)',
+      'Criar experiÃªncia mobile nativa iOS e Android',
+      'Implementar sistema de limites configurÃ¡veis por perfil'
     ],
     compliance: ['PSD2', 'GDPR', 'SIBS', 'SCA'],
     qualityScore: 98,
@@ -82,13 +84,13 @@ const projectsData: Record<number, any> = {
       {
         id: 'EP-001',
         type: 'epic',
-        title: 'Segurança Bancária',
-        description: 'Implementação completa de segurança bancária com PSD2 e SCA',
-        businessValue: 'Garantir conformidade com regulação PSD2 e proteger transações financeiras',
+        title: 'SeguranÃ§a BancÃ¡ria',
+        description: 'ImplementaÃ§Ã£o completa de seguranÃ§a bancÃ¡ria com PSD2 e SCA',
+        businessValue: 'Garantir conformidade com regulaÃ§Ã£o PSD2 e proteger transaÃ§Ãµes financeiras',
         priority: 'High',
         status: 'Exportado',
         acceptanceCriteria: [
-          'Autenticação forte (SCA) obrigatória para transações > 30€',
+          'AutenticaÃ§Ã£o forte (SCA) obrigatÃ³ria para transaÃ§Ãµes > 30â‚¬',
           'Biometria validada conforme normas do Banco de Portugal',
           'Logs de auditoria mantidos por 10 anos (requisito legal)'
         ],
@@ -98,7 +100,7 @@ const projectsData: Record<number, any> = {
           {
             id: 'FT-001',
             type: 'feature',
-            title: 'Autenticação PSD2',
+            title: 'AutenticaÃ§Ã£o PSD2',
             description: 'Strong Customer Authentication conforme PSD2',
             priority: 'High',
             status: 'Exportado',
@@ -115,13 +117,13 @@ const projectsData: Record<number, any> = {
                 id: 'US-001',
                 type: 'userStory',
                 title: 'Login com Biometria',
-                asA: 'cliente bancário',
+                asA: 'cliente bancÃ¡rio',
                 iWant: 'fazer login usando biometria',
-                soThat: 'possa aceder à aplicação de forma rápida e segura',
+                soThat: 'possa aceder Ã  aplicaÃ§Ã£o de forma rÃ¡pida e segura',
                 acceptanceCriteria: [
                   'Sistema deve suportar Touch ID e Face ID',
                   'Fallback para PIN em caso de falha',
-                  'Máximo de 3 tentativas antes de bloqueio'
+                  'MÃ¡ximo de 3 tentativas antes de bloqueio'
                 ],
                 priority: 'High',
                 storyPoints: 5,
@@ -138,15 +140,15 @@ const projectsData: Record<number, any> = {
       {
         id: 'EP-002',
         type: 'epic',
-        title: 'Gestão de Pagamentos',
-        description: 'Sistema completo de transferências e pagamentos',
-        businessValue: 'Permitir transferências instantâneas P2P',
+        title: 'GestÃ£o de Pagamentos',
+        description: 'Sistema completo de transferÃªncias e pagamentos',
+        businessValue: 'Permitir transferÃªncias instantÃ¢neas P2P',
         priority: 'High',
         status: 'Exportado',
         acceptanceCriteria: [
-          'Transferências instantâneas via SIBS',
-          'Limites configuráveis por perfil',
-          'Notificações em tempo real'
+          'TransferÃªncias instantÃ¢neas via SIBS',
+          'Limites configurÃ¡veis por perfil',
+          'NotificaÃ§Ãµes em tempo real'
         ],
         expanded: false,
         features: []
@@ -154,15 +156,15 @@ const projectsData: Record<number, any> = {
       {
         id: 'EP-003',
         type: 'epic',
-        title: 'Experiência de Utilizador',
+        title: 'ExperiÃªncia de Utilizador',
         description: 'Interface mobile nativa iOS e Android',
-        businessValue: 'Melhorar usabilidade e satisfação do cliente',
+        businessValue: 'Melhorar usabilidade e satisfaÃ§Ã£o do cliente',
         priority: 'Medium',
         status: 'Exportado',
         acceptanceCriteria: [
-          'Design responsivo e acessível',
-          'Performance < 2s por operação',
-          'Suporte offline básico'
+          'Design responsivo e acessÃ­vel',
+          'Performance < 2s por operaÃ§Ã£o',
+          'Suporte offline bÃ¡sico'
         ],
         expanded: false,
         features: []
@@ -180,13 +182,13 @@ const projectsData: Record<number, any> = {
     createdAt: new Date('2025-12-15'),
     lastExport: new Date('2026-01-08T14:30:00'),
     createdBy: 'Susana Gamito',
-    description: 'Sistema completo de pagamentos móveis MB Way para particulares e empresas, incluindo transferências instantâneas, pagamentos em comerciantes, levantamentos ATM e gestão de limites.',
+    description: 'Sistema completo de pagamentos mÃ³veis MB Way para particulares e empresas, incluindo transferÃªncias instantÃ¢neas, pagamentos em comerciantes, levantamentos ATM e gestÃ£o de limites.',
     objectives: [
-      'Implementar transferências instantâneas P2P via número de telemóvel',
+      'Implementar transferÃªncias instantÃ¢neas P2P via nÃºmero de telemÃ³vel',
       'Integrar com rede SIBS para processamento de pagamentos',
-      'Garantir conformidade total com PSD2 e autenticação forte (SCA)',
-      'Criar experiência mobile nativa iOS e Android',
-      'Implementar sistema de limites configuráveis por perfil'
+      'Garantir conformidade total com PSD2 e autenticaÃ§Ã£o forte (SCA)',
+      'Criar experiÃªncia mobile nativa iOS e Android',
+      'Implementar sistema de limites configurÃ¡veis por perfil'
     ],
     compliance: ['PSD2', 'GDPR', 'SIBS', 'SCA'],
     qualityScore: 98,
@@ -196,17 +198,17 @@ const projectsData: Record<number, any> = {
       {
         id: 'EP-001',
         type: 'epic',
-        title: 'Autenticação e Segurança Bancária',
-        description: 'Implementação completa de autenticação forte com múltiplos fatores conforme PSD2 e Banco de Portugal',
-        businessValue: 'Garantir conformidade com regulação PSD2, proteger transações financeiras e prevenir fraude',
+        title: 'AutenticaÃ§Ã£o e SeguranÃ§a BancÃ¡ria',
+        description: 'ImplementaÃ§Ã£o completa de autenticaÃ§Ã£o forte com mÃºltiplos fatores conforme PSD2 e Banco de Portugal',
+        businessValue: 'Garantir conformidade com regulaÃ§Ã£o PSD2, proteger transaÃ§Ãµes financeiras e prevenir fraude',
         priority: 'High',
         status: 'Exportado',
         acceptanceCriteria: [
-          'Autenticação forte (SCA) obrigatória para transações > 30€',
+          'AutenticaÃ§Ã£o forte (SCA) obrigatÃ³ria para transaÃ§Ãµes > 30â‚¬',
           'Biometria validada conforme normas do Banco de Portugal',
           'Logs de auditoria mantidos por 10 anos (requisito legal)',
           'Alertas de fraude em tempo real via SIBS',
-          'Conformidade com GDPR na retenção de dados biométricos'
+          'Conformidade com GDPR na retenÃ§Ã£o de dados biomÃ©tricos'
         ],
         expanded: true,
         
@@ -214,12 +216,12 @@ const projectsData: Record<number, any> = {
           {
             id: 'FT-001',
             type: 'feature',
-            title: 'Autenticação PSD2 Compliant',
-            description: 'Sistema de autenticação forte com biometria, PIN e OTP conforme diretiva PSD2',
+            title: 'AutenticaÃ§Ã£o PSD2 Compliant',
+            description: 'Sistema de autenticaÃ§Ã£o forte com biometria, PIN e OTP conforme diretiva PSD2',
             priority: 'High',
             status: 'Exportado',
             businessRules: [
-              'SCA obrigatório para todas as transações acima de 30€',
+              'SCA obrigatÃ³rio para todas as transaÃ§Ãµes acima de 30â‚¬',
               'Biometria como fator "algo que sou"',
               'Dispositivo registado como fator "algo que tenho"',
               'PIN/Password como fator "algo que sei"'
@@ -231,17 +233,17 @@ const projectsData: Record<number, any> = {
                 id: 'US-001',
                 type: 'userStory',
                 title: 'Login com Biometria Facial/Digital',
-                asA: 'cliente bancário particular',
-                iWant: 'fazer login usando biometria (impressão digital ou reconhecimento facial)',
-                soThat: 'possa aceder de forma rápida e segura à minha conta sem memorizar passwords complexas',
+                asA: 'cliente bancÃ¡rio particular',
+                iWant: 'fazer login usando biometria (impressÃ£o digital ou reconhecimento facial)',
+                soThat: 'possa aceder de forma rÃ¡pida e segura Ã  minha conta sem memorizar passwords complexas',
                 acceptanceCriteria: [
                   'Suportar Touch ID e Face ID em iOS 14+',
-                  'Suportar impressão digital e reconhecimento facial em Android 10+',
-                  'Fallback automático para PIN de 6 dígitos se biometria indisponível',
-                  'Máximo 3 tentativas falhadas, depois bloqueia e requer desbloqueio por SMS OTP',
-                  'Tempo de autenticação < 2 segundos em 95% dos casos',
-                  'Validação de vivacidade (liveness detection) para prevenir spoofing',
-                  'Encriptação de template biométrico no Secure Enclave/TEE'
+                  'Suportar impressÃ£o digital e reconhecimento facial em Android 10+',
+                  'Fallback automÃ¡tico para PIN de 6 dÃ­gitos se biometria indisponÃ­vel',
+                  'MÃ¡ximo 3 tentativas falhadas, depois bloqueia e requer desbloqueio por SMS OTP',
+                  'Tempo de autenticaÃ§Ã£o < 2 segundos em 95% dos casos',
+                  'ValidaÃ§Ã£o de vivacidade (liveness detection) para prevenir spoofing',
+                  'EncriptaÃ§Ã£o de template biomÃ©trico no Secure Enclave/TEE'
                 ],
                 priority: 'High',
                 storyPoints: 13,
@@ -253,7 +255,7 @@ const projectsData: Record<number, any> = {
                   { 
                     id: 'TSK-001', 
                     title: 'Implementar LocalAuthentication Framework iOS',
-                    description: 'Integrar framework nativo iOS para Touch ID e Face ID com validação de vivacidade e fallback automático',
+                    description: 'Integrar framework nativo iOS para Touch ID e Face ID com validaÃ§Ã£o de vivacidade e fallback automÃ¡tico',
                     estimate: '8h',
                     assignee: 'Developer iOS',
                     status: 'Exportado',
@@ -262,25 +264,25 @@ const projectsData: Record<number, any> = {
                   { 
                     id: 'TSK-002', 
                     title: 'Implementar BiometricPrompt Android',
-                    description: 'Usar API BiometricPrompt do Android com BiometricManager para validação e gestão de estados',
+                    description: 'Usar API BiometricPrompt do Android com BiometricManager para validaÃ§Ã£o e gestÃ£o de estados',
                     estimate: '8h',
                     assignee: 'Developer Android',
                     status: 'Exportado',
-                    technicalNotes: 'Configurar BIOMETRIC_STRONG com CryptoObject para máxima segurança'
+                    technicalNotes: 'Configurar BIOMETRIC_STRONG com CryptoObject para mÃ¡xima seguranÃ§a'
                   },
                   { 
                     id: 'TSK-003', 
-                    title: 'Criar API de validação biométrica backend',
-                    description: 'Endpoint para validar token biométrico gerado pelo dispositivo contra HSM do banco',
+                    title: 'Criar API de validaÃ§Ã£o biomÃ©trica backend',
+                    description: 'Endpoint para validar token biomÃ©trico gerado pelo dispositivo contra HSM do banco',
                     estimate: '6h',
                     assignee: 'Backend Developer',
                     status: 'Exportado',
-                    technicalNotes: 'Integrar com HSM Thales para validação de assinatura digital'
+                    technicalNotes: 'Integrar com HSM Thales para validaÃ§Ã£o de assinatura digital'
                   },
                   { 
                     id: 'TSK-004', 
                     title: 'Implementar sistema de fallback para PIN',
-                    description: 'Fluxo alternativo com PIN de 6 dígitos cifrado quando biometria não disponível',
+                    description: 'Fluxo alternativo com PIN de 6 dÃ­gitos cifrado quando biometria nÃ£o disponÃ­vel',
                     estimate: '4h',
                     assignee: 'Frontend Developer',
                     status: 'Exportado'
@@ -288,7 +290,7 @@ const projectsData: Record<number, any> = {
                   { 
                     id: 'TSK-005', 
                     title: 'Sistema de bloqueio e desbloqueio',
-                    description: 'Contador de tentativas falhadas com bloqueio temporário (15min) e desbloqueio via SMS OTP',
+                    description: 'Contador de tentativas falhadas com bloqueio temporÃ¡rio (15min) e desbloqueio via SMS OTP',
                     estimate: '5h',
                     assignee: 'Backend Developer',
                     status: 'Exportado'
@@ -296,20 +298,20 @@ const projectsData: Record<number, any> = {
                   { 
                     id: 'TSK-006', 
                     title: 'Logs de auditoria para Banco de Portugal',
-                    description: 'Registar todas as tentativas de autenticação (sucesso e falha) conforme requisitos legais',
+                    description: 'Registar todas as tentativas de autenticaÃ§Ã£o (sucesso e falha) conforme requisitos legais',
                     estimate: '4h',
                     assignee: 'Backend Developer',
                     status: 'Exportado',
-                    technicalNotes: 'Armazenar em BD imutável (append-only) com retenção de 10 anos'
+                    technicalNotes: 'Armazenar em BD imutÃ¡vel (append-only) com retenÃ§Ã£o de 10 anos'
                   },
                   { 
                     id: 'TSK-007', 
-                    title: 'Proteção anti-spoofing (liveness detection)',
-                    description: 'Implementar validação de vivacidade para prevenir ataques com fotos/vídeos',
+                    title: 'ProteÃ§Ã£o anti-spoofing (liveness detection)',
+                    description: 'Implementar validaÃ§Ã£o de vivacidade para prevenir ataques com fotos/vÃ­deos',
                     estimate: '8h',
                     assignee: 'Developer Mobile',
                     status: 'Exportado',
-                    technicalNotes: 'Usar native liveness check do OS quando disponível'
+                    technicalNotes: 'Usar native liveness check do OS quando disponÃ­vel'
                   }
                 ],
                 
@@ -318,83 +320,83 @@ const projectsData: Record<number, any> = {
                     id: 'TC-001', 
                     type: 'Functional',
                     priority: 'High',
-                    title: 'Validar login biométrico bem-sucedido',
+                    title: 'Validar login biomÃ©trico bem-sucedido',
                     preconditions: [
                       'Utilizador tem conta ativa',
                       'Dispositivo tem biometria configurada',
-                      'App instalada e permissões concedidas'
+                      'App instalada e permissÃµes concedidas'
                     ],
                     steps: [
                       'Abrir app MB Way',
-                      'Sistema detecta biometria disponível',
-                      'Sistema solicita autenticação biométrica',
-                      'Utilizador coloca dedo válido/apresenta face',
+                      'Sistema detecta biometria disponÃ­vel',
+                      'Sistema solicita autenticaÃ§Ã£o biomÃ©trica',
+                      'Utilizador coloca dedo vÃ¡lido/apresenta face',
                       'Sistema valida localmente',
                       'Sistema envia token para backend',
                       'Backend valida com HSM',
-                      'Sistema cria sessão',
+                      'Sistema cria sessÃ£o',
                       'Redireciona para dashboard'
                     ],
-                    expectedResult: 'Login completo em < 2s, sessão criada com token JWT válido, dashboard apresentado com saldo atualizado',
+                    expectedResult: 'Login completo em < 2s, sessÃ£o criada com token JWT vÃ¡lido, dashboard apresentado com saldo atualizado',
                     testData: 'User: test.user@bcp.pt, Device: iPhone 13 com Face ID configurado'
                   },
                   { 
                     id: 'TC-002', 
                     type: 'Functional',
                     priority: 'High',
-                    title: 'Testar fallback quando biometria não configurada',
+                    title: 'Testar fallback quando biometria nÃ£o configurada',
                     preconditions: [
                       'Utilizador tem conta ativa',
                       'Dispositivo SEM biometria configurada'
                     ],
                     steps: [
                       'Abrir app',
-                      'Sistema deteta ausência de biometria',
-                      'Sistema apresenta ecrã de PIN automaticamente'
+                      'Sistema deteta ausÃªncia de biometria',
+                      'Sistema apresenta ecrÃ£ de PIN automaticamente'
                     ],
-                    expectedResult: 'App apresenta teclado numérico para PIN de 6 dígitos sem mensagem de erro',
+                    expectedResult: 'App apresenta teclado numÃ©rico para PIN de 6 dÃ­gitos sem mensagem de erro',
                     testData: 'Device: Android emulator sem biometria'
                   },
                   { 
                     id: 'TC-003', 
                     type: 'Security',
                     priority: 'Critical',
-                    title: 'Validar bloqueio após 3 tentativas falhadas',
+                    title: 'Validar bloqueio apÃ³s 3 tentativas falhadas',
                     preconditions: [
                       'Utilizador tem conta ativa',
                       'Contador de tentativas a zero'
                     ],
                     steps: [
-                      'Tentar autenticação com biometria inválida (dedo errado)',
+                      'Tentar autenticaÃ§Ã£o com biometria invÃ¡lida (dedo errado)',
                       'Sistema conta tentativa 1',
-                      'Repetir com biometria inválida',
+                      'Repetir com biometria invÃ¡lida',
                       'Sistema conta tentativa 2',
-                      'Repetir terceira vez com biometria inválida',
+                      'Repetir terceira vez com biometria invÃ¡lida',
                       'Sistema conta tentativa 3 e aciona bloqueio'
                     ],
-                    expectedResult: 'Conta bloqueada temporariamente (15min), SMS OTP enviado para número registado, log de segurança criado com timestamp e device ID, mensagem clara ao utilizador',
-                    testData: 'User com telemóvel +351 912 345 678'
+                    expectedResult: 'Conta bloqueada temporariamente (15min), SMS OTP enviado para nÃºmero registado, log de seguranÃ§a criado com timestamp e device ID, mensagem clara ao utilizador',
+                    testData: 'User com telemÃ³vel +351 912 345 678'
                   },
                   { 
                     id: 'TC-004', 
                     type: 'Security',
                     priority: 'Critical',
-                    title: 'Testar proteção anti-spoofing',
+                    title: 'Testar proteÃ§Ã£o anti-spoofing',
                     preconditions: [
-                      'Dispositivo com câmara funcional',
+                      'Dispositivo com cÃ¢mara funcional',
                       'Face ID configurado'
                     ],
                     steps: [
                       'Tentar autenticar com fotografia impressa do rosto',
                       'Sistema executa liveness detection',
-                      'Sistema deteta ausência de vivacidade',
-                      'Rejeitar autenticação',
-                      'Tentar com vídeo do rosto',
+                      'Sistema deteta ausÃªncia de vivacidade',
+                      'Rejeitar autenticaÃ§Ã£o',
+                      'Tentar com vÃ­deo do rosto',
                       'Sistema deteta 2D em vez de 3D',
-                      'Rejeitar autenticação'
+                      'Rejeitar autenticaÃ§Ã£o'
                     ],
-                    expectedResult: 'Ambas as tentativas rejeitadas, alerta de segurança enviado por email, tentativas registadas em log de auditoria com flag "spoofing_attempt"',
-                    testData: 'Foto impressa e vídeo gravado previamente'
+                    expectedResult: 'Ambas as tentativas rejeitadas, alerta de seguranÃ§a enviado por email, tentativas registadas em log de auditoria com flag "spoofing_attempt"',
+                    testData: 'Foto impressa e vÃ­deo gravado previamente'
                   },
                   { 
                     id: 'TC-005', 
@@ -406,54 +408,54 @@ const projectsData: Record<number, any> = {
                       'Acesso a logs de auditoria'
                     ],
                     steps: [
-                      'Executar fluxo de autenticação completo',
-                      'Validar presença dos 3 elementos SCA:',
-                      '  - Algo que sei: PIN/Password ✓',
-                      '  - Algo que tenho: Dispositivo registado ✓',
-                      '  - Algo que sou: Biometria ✓',
-                      'Verificar logs contêm todos os dados obrigatórios',
+                      'Executar fluxo de autenticaÃ§Ã£o completo',
+                      'Validar presenÃ§a dos 3 elementos SCA:',
+                      '  - Algo que sei: PIN/Password âœ“',
+                      '  - Algo que tenho: Dispositivo registado âœ“',
+                      '  - Algo que sou: Biometria âœ“',
+                      'Verificar logs contÃªm todos os dados obrigatÃ³rios',
                       'Verificar timestamps em formato ISO 8601',
-                      'Verificar encriptação de dados sensíveis',
-                      'Validar retenção configurada para 10 anos'
+                      'Verificar encriptaÃ§Ã£o de dados sensÃ­veis',
+                      'Validar retenÃ§Ã£o configurada para 10 anos'
                     ],
-                    expectedResult: 'Todos os 3 elementos SCA presentes e validados, logs completos com: user_id, device_id, biometric_type, timestamp, ip_address, geolocation, result. Dados encriptados em repouso (AES-256). Política de retenção ativa.',
+                    expectedResult: 'Todos os 3 elementos SCA presentes e validados, logs completos com: user_id, device_id, biometric_type, timestamp, ip_address, geolocation, result. Dados encriptados em repouso (AES-256). PolÃ­tica de retenÃ§Ã£o ativa.',
                     testData: 'Credenciais de teste staging'
                   },
                   { 
                     id: 'TC-006', 
                     type: 'Performance',
                     priority: 'Medium',
-                    title: 'Validar performance de autenticação',
+                    title: 'Validar performance de autenticaÃ§Ã£o',
                     preconditions: [
-                      'Rede 4G estável (50 Mbps)',
-                      'Backend em produção'
+                      'Rede 4G estÃ¡vel (50 Mbps)',
+                      'Backend em produÃ§Ã£o'
                     ],
                     steps: [
-                      'Executar 100 autenticações biométricas sequenciais',
-                      'Medir tempo de cada transação completa (touch -> dashboard)',
+                      'Executar 100 autenticaÃ§Ãµes biomÃ©tricas sequenciais',
+                      'Medir tempo de cada transaÃ§Ã£o completa (touch -> dashboard)',
                       'Calcular percentil 95',
                       'Identificar outliers > 3s'
                     ],
                     expectedResult: 'P95 < 2 segundos, P99 < 3 segundos, 0 timeouts, 0 erros de rede',
-                    testData: 'Script de automação com 100 iterações'
+                    testData: 'Script de automaÃ§Ã£o com 100 iteraÃ§Ãµes'
                   }
                 ]
               },
               {
                 id: 'US-002',
                 type: 'userStory',
-                title: 'OTP via SMS para Autenticação Forte',
-                asA: 'cliente bancário',
-                iWant: 'receber código OTP por SMS para transações sensíveis',
-                soThat: 'tenha a certeza absoluta que sou eu a autorizar operações importantes',
+                title: 'OTP via SMS para AutenticaÃ§Ã£o Forte',
+                asA: 'cliente bancÃ¡rio',
+                iWant: 'receber cÃ³digo OTP por SMS para transaÃ§Ãµes sensÃ­veis',
+                soThat: 'tenha a certeza absoluta que sou eu a autorizar operaÃ§Ãµes importantes',
                 acceptanceCriteria: [
-                  'OTP de 6 dígitos numéricos aleatórios',
-                  'Válido por 3 minutos após envio',
+                  'OTP de 6 dÃ­gitos numÃ©ricos aleatÃ³rios',
+                  'VÃ¡lido por 3 minutos apÃ³s envio',
                   'Enviado via gateway SIBS homologado',
-                  'Possibilidade de reenviar após 60 segundos',
-                  'Máximo 3 códigos válidos em simultâneo (rolling window)',
-                  'Obrigatório para transações > 50€ ou alterações de dados sensíveis',
-                  'SMS contém: código, validade, nome do banco, aviso anti-phishing'
+                  'Possibilidade de reenviar apÃ³s 60 segundos',
+                  'MÃ¡ximo 3 cÃ³digos vÃ¡lidos em simultÃ¢neo (rolling window)',
+                  'ObrigatÃ³rio para transaÃ§Ãµes > 50â‚¬ ou alteraÃ§Ãµes de dados sensÃ­veis',
+                  'SMS contÃ©m: cÃ³digo, validade, nome do banco, aviso anti-phishing'
                 ],
                 priority: 'High',
                 storyPoints: 8,
@@ -465,15 +467,15 @@ const projectsData: Record<number, any> = {
                   { 
                     id: 'TSK-008', 
                     title: 'Integrar com gateway SMS SIBS',
-                    description: 'Implementar comunicação com API SIBS para envio de SMS com retry e failover',
+                    description: 'Implementar comunicaÃ§Ã£o com API SIBS para envio de SMS com retry e failover',
                     estimate: '8h',
                     assignee: 'Backend Developer',
                     status: 'Exportado'
                   },
                   { 
                     id: 'TSK-009', 
-                    title: 'Algoritmo de geração OTP (TOTP)',
-                    description: 'Implementar Time-based OTP com validação de janela temporal de 3 minutos',
+                    title: 'Algoritmo de geraÃ§Ã£o OTP (TOTP)',
+                    description: 'Implementar Time-based OTP com validaÃ§Ã£o de janela temporal de 3 minutos',
                     estimate: '5h',
                     assignee: 'Backend Developer',
                     status: 'Exportado',
@@ -481,8 +483,8 @@ const projectsData: Record<number, any> = {
                   },
                   { 
                     id: 'TSK-010', 
-                    title: 'UI de inserção de código OTP',
-                    description: 'Interface com 6 campos individuais + timer visual + opção de reenvio',
+                    title: 'UI de inserÃ§Ã£o de cÃ³digo OTP',
+                    description: 'Interface com 6 campos individuais + timer visual + opÃ§Ã£o de reenvio',
                     estimate: '6h',
                     assignee: 'Frontend Developer',
                     status: 'Exportado'
@@ -490,7 +492,7 @@ const projectsData: Record<number, any> = {
                   { 
                     id: 'TSK-011', 
                     title: 'Sistema de rate limiting anti-abuse',
-                    description: 'Prevenir abuso de reenvios (max 5/hora) e tentativas (max 3 códigos errados)',
+                    description: 'Prevenir abuso de reenvios (max 5/hora) e tentativas (max 3 cÃ³digos errados)',
                     estimate: '4h',
                     assignee: 'Backend Developer',
                     status: 'Exportado'
@@ -503,34 +505,34 @@ const projectsData: Record<number, any> = {
                     type: 'Functional',
                     priority: 'High',
                     title: 'Validar fluxo completo OTP',
-                    preconditions: ['User autenticado', 'Saldo > 100€'],
+                    preconditions: ['User autenticado', 'Saldo > 100â‚¬'],
                     steps: [
-                      'Iniciar transferência de 100€',
-                      'Sistema deteta valor > 50€',
+                      'Iniciar transferÃªncia de 100â‚¬',
+                      'Sistema deteta valor > 50â‚¬',
                       'Sistema solicita OTP',
-                      'Backend gera código TOTP',
+                      'Backend gera cÃ³digo TOTP',
                       'SMS enviado via SIBS',
                       'Utilizador recebe SMS em < 10s',
-                      'Inserir código correto nos 6 campos',
-                      'Sistema valida código e timestamp',
-                      'Transação processada'
+                      'Inserir cÃ³digo correto nos 6 campos',
+                      'Sistema valida cÃ³digo e timestamp',
+                      'TransaÃ§Ã£o processada'
                     ],
-                    expectedResult: 'Transação autorizada e processada com sucesso, comprovante gerado, saldo atualizado',
-                    testData: 'Montante: 100€, Telemóvel: +351 912 000 000'
+                    expectedResult: 'TransaÃ§Ã£o autorizada e processada com sucesso, comprovante gerado, saldo atualizado',
+                    testData: 'Montante: 100â‚¬, TelemÃ³vel: +351 912 000 000'
                   },
                   { 
                     id: 'TC-008', 
                     type: 'Security',
                     priority: 'High',
-                    title: 'Testar expiração após 3 minutos',
+                    title: 'Testar expiraÃ§Ã£o apÃ³s 3 minutos',
                     preconditions: ['OTP gerado e enviado'],
                     steps: [
                       'Receber OTP por SMS',
-                      'Não inserir código',
+                      'NÃ£o inserir cÃ³digo',
                       'Aguardar exatamente 3 minutos e 1 segundo',
-                      'Tentar usar código'
+                      'Tentar usar cÃ³digo'
                     ],
-                    expectedResult: 'Código rejeitado com mensagem "Código expirado", opção de solicitar novo código apresentada',
+                    expectedResult: 'CÃ³digo rejeitado com mensagem "CÃ³digo expirado", opÃ§Ã£o de solicitar novo cÃ³digo apresentada',
                     testData: 'Timer: 181 segundos'
                   }
                 ]
@@ -539,15 +541,15 @@ const projectsData: Record<number, any> = {
                 id: 'US-003',
                 type: 'userStory',
                 title: 'Registo de Dispositivo para SCA',
-                asA: 'sistema de segurança',
+                asA: 'sistema de seguranÃ§a',
                 iWant: 'registar e validar dispositivos usados pelos clientes',
                 soThat: 'o dispositivo possa ser usado como fator "algo que tenho" no SCA',
                 acceptanceCriteria: [
-                  'Registo único de dispositivo na primeira utilização',
-                  'Geração de device fingerprint (ID único, modelo, OS, versão)',
+                  'Registo Ãºnico de dispositivo na primeira utilizaÃ§Ã£o',
+                  'GeraÃ§Ã£o de device fingerprint (ID Ãºnico, modelo, OS, versÃ£o)',
                   'Armazenamento seguro de token no Keychain/Keystore',
-                  'Validação de dispositivo em cada login',
-                  'Alerta se login de dispositivo não reconhecido',
+                  'ValidaÃ§Ã£o de dispositivo em cada login',
+                  'Alerta se login de dispositivo nÃ£o reconhecido',
                   'Limite de 5 dispositivos ativos por utilizador'
                 ],
                 priority: 'High',
@@ -563,15 +565,15 @@ const projectsData: Record<number, any> = {
           {
             id: 'FT-002',
             type: 'feature',
-            title: 'Gestão de Sessão e Timeout Regulamentar',
-            description: 'Controlo rigoroso de sessões conforme normas de segurança do Banco de Portugal e boas práticas PSD2',
+            title: 'GestÃ£o de SessÃ£o e Timeout Regulamentar',
+            description: 'Controlo rigoroso de sessÃµes conforme normas de seguranÃ§a do Banco de Portugal e boas prÃ¡ticas PSD2',
             priority: 'High',
             status: 'Exportado',
             businessRules: [
               'Timeout de inatividade: 5 minutos',
               'Aviso 30 segundos antes do timeout',
-              'Limpeza completa de dados sensíveis ao terminar sessão',
-              'Sessão única por utilizador (logout automático em outros dispositivos)'
+              'Limpeza completa de dados sensÃ­veis ao terminar sessÃ£o',
+              'SessÃ£o Ãºnica por utilizador (logout automÃ¡tico em outros dispositivos)'
             ],
             expanded: false,
             userStories: []
@@ -581,17 +583,17 @@ const projectsData: Record<number, any> = {
       {
         id: 'EP-002',
         type: 'epic',
-        title: 'Transferências e Pagamentos MB Way',
-        description: 'Sistema completo de transferências instantâneas P2P, pagamentos a comerciantes e gestão de limites',
-        businessValue: 'Funcionalidade core que gera volume transacional e receita de comissões para o banco',
+        title: 'TransferÃªncias e Pagamentos MB Way',
+        description: 'Sistema completo de transferÃªncias instantÃ¢neas P2P, pagamentos a comerciantes e gestÃ£o de limites',
+        businessValue: 'Funcionalidade core que gera volume transacional e receita de comissÃµes para o banco',
         priority: 'High',
         status: 'Exportado',
         acceptanceCriteria: [
-          'Transferências processadas em < 5 segundos (P95)',
-          'Integração completa com rede SIBS',
-          'Limites configuráveis por perfil de cliente',
+          'TransferÃªncias processadas em < 5 segundos (P95)',
+          'IntegraÃ§Ã£o completa com rede SIBS',
+          'Limites configurÃ¡veis por perfil de cliente',
           'Comprovantes digitais gerados imediatamente',
-          'Notificações push para remetente e destinatário'
+          'NotificaÃ§Ãµes push para remetente e destinatÃ¡rio'
         ],
         expanded: false,
         features: []
@@ -599,17 +601,17 @@ const projectsData: Record<number, any> = {
       {
         id: 'EP-003',
         type: 'epic',
-        title: 'Compliance e Auditoria Bancária',
+        title: 'Compliance e Auditoria BancÃ¡ria',
         description: 'Sistema de logs, auditoria e reports regulamentares para Banco de Portugal e BCE',
         businessValue: 'Garantir conformidade legal, evitar coimas regulamentares e permitir auditorias eficientes',
         priority: 'High',
         status: 'Exportado',
         acceptanceCriteria: [
-          'Logs imutáveis (append-only) de todas as transações',
-          'Retenção de dados por 10 anos conforme legislação',
-          'Reports automáticos mensais para Banco de Portugal',
+          'Logs imutÃ¡veis (append-only) de todas as transaÃ§Ãµes',
+          'RetenÃ§Ã£o de dados por 10 anos conforme legislaÃ§Ã£o',
+          'Reports automÃ¡ticos mensais para Banco de Portugal',
           'Pista de auditoria completa com rastreabilidade end-to-end',
-          'Encriptação de dados em repouso e em trânsito'
+          'EncriptaÃ§Ã£o de dados em repouso e em trÃ¢nsito'
         ],
         expanded: false,
         features: []
@@ -627,9 +629,9 @@ const projectsData: Record<number, any> = {
     createdAt: new Date('2025-12-15'),
     lastExport: new Date('2026-01-08T14:30:00'),
     createdBy: 'Susana Gamito',
-    description: 'Sistema de pagamentos móveis MB Way com integração SIBS para transferências instantâneas P2P',
+    description: 'Sistema de pagamentos mÃ³veis MB Way com integraÃ§Ã£o SIBS para transferÃªncias instantÃ¢neas P2P',
     objectives: [
-      'Implementar transferências instantâneas via número de telemóvel',
+      'Implementar transferÃªncias instantÃ¢neas via nÃºmero de telemÃ³vel',
       'Integrar com rede SIBS',
       'Garantir conformidade PSD2 e SCA'
     ],
@@ -640,24 +642,24 @@ const projectsData: Record<number, any> = {
       {
         id: 'EP-001',
         type: 'epic',
-        title: 'Autenticação e Segurança PSD2',
-        description: 'Implementação completa de SCA e biometria',
-        businessValue: 'Conformidade regulamentar obrigatória',
+        title: 'AutenticaÃ§Ã£o e SeguranÃ§a PSD2',
+        description: 'ImplementaÃ§Ã£o completa de SCA e biometria',
+        businessValue: 'Conformidade regulamentar obrigatÃ³ria',
         priority: 'High',
         status: 'Exportado',
-        acceptanceCriteria: ['SCA para transações > 30€', 'Biometria validada', 'Logs 10 anos'],
+        acceptanceCriteria: ['SCA para transaÃ§Ãµes > 30â‚¬', 'Biometria validada', 'Logs 10 anos'],
         expanded: false,
         features: []
       },
       {
         id: 'EP-002',
         type: 'epic',
-        title: 'Transferências Instantâneas',
-        description: 'Transferências P2P via telemóvel',
+        title: 'TransferÃªncias InstantÃ¢neas',
+        description: 'TransferÃªncias P2P via telemÃ³vel',
         businessValue: 'Core feature do produto',
         priority: 'High',
         status: 'Exportado',
-        acceptanceCriteria: ['Transferência < 5 segundos', 'Integração SIBS', 'Limites configuráveis'],
+        acceptanceCriteria: ['TransferÃªncia < 5 segundos', 'IntegraÃ§Ã£o SIBS', 'Limites configurÃ¡veis'],
         expanded: false,
         features: []
       }
@@ -673,12 +675,12 @@ const projectsData: Record<number, any> = {
     version: 'v1.5.2',
     createdAt: new Date('2025-11-20'),
     lastExport: new Date('2026-01-06T09:15:00'),
-    createdBy: 'João Santos',
-    description: 'Portal web de homebanking para empresas com gestão multi-utilizador e aprovações multinível',
+    createdBy: 'JoÃ£o Santos',
+    description: 'Portal web de homebanking para empresas com gestÃ£o multi-utilizador e aprovaÃ§Ãµes multinÃ­vel',
     objectives: [
-      'Gestão centralizada de contas empresariais',
-      'Workflow de aprovações customizável',
-      'Exportação para ERP'
+      'GestÃ£o centralizada de contas empresariais',
+      'Workflow de aprovaÃ§Ãµes customizÃ¡vel',
+      'ExportaÃ§Ã£o para ERP'
     ],
     compliance: ['PSD2', 'GDPR', 'Banco de Portugal', 'AML'],
     qualityScore: 95,
@@ -687,24 +689,24 @@ const projectsData: Record<number, any> = {
       {
         id: 'EP-001',
         type: 'epic',
-        title: 'Gestão Multi-Utilizador',
-        description: 'Sistema de permissões e roles empresariais',
+        title: 'GestÃ£o Multi-Utilizador',
+        description: 'Sistema de permissÃµes e roles empresariais',
         businessValue: 'Controlo de acesso granular',
         priority: 'High',
         status: 'Exportado',
-        acceptanceCriteria: ['Roles customizáveis', 'Audit trail completo', 'SSO corporativo'],
+        acceptanceCriteria: ['Roles customizÃ¡veis', 'Audit trail completo', 'SSO corporativo'],
         expanded: false,
         features: []
       },
       {
         id: 'EP-002',
         type: 'epic',
-        title: 'Workflow de Aprovações',
-        description: 'Aprovação multinível de pagamentos',
+        title: 'Workflow de AprovaÃ§Ãµes',
+        description: 'AprovaÃ§Ã£o multinÃ­vel de pagamentos',
         businessValue: 'Controlo financeiro empresarial',
         priority: 'High',
         status: 'Exportado',
-        acceptanceCriteria: ['Multi-assinatura configurável', 'Notificações push', 'Prazos de aprovação'],
+        acceptanceCriteria: ['Multi-assinatura configurÃ¡vel', 'NotificaÃ§Ãµes push', 'Prazos de aprovaÃ§Ã£o'],
         expanded: false,
         features: []
       }
@@ -721,11 +723,11 @@ const projectsData: Record<number, any> = {
     createdAt: new Date('2025-10-05'),
     lastExport: new Date('2026-01-05T16:45:00'),
     createdBy: 'Maria Costa',
-    description: 'App mobile nativa iOS/Android para clientes particulares com gestão completa de contas',
+    description: 'App mobile nativa iOS/Android para clientes particulares com gestÃ£o completa de contas',
     objectives: [
-      'Experiência mobile-first',
+      'ExperiÃªncia mobile-first',
       'Onboarding digital completo',
-      'Gestão de cartões e investimentos'
+      'GestÃ£o de cartÃµes e investimentos'
     ],
     compliance: ['PSD2', 'GDPR', 'SIBS', 'AML', 'KYC'],
     qualityScore: 97,
@@ -736,22 +738,22 @@ const projectsData: Record<number, any> = {
         type: 'epic',
         title: 'Onboarding Digital',
         description: 'Abertura de conta 100% digital',
-        businessValue: 'Reduzir abandono e custos de aquisição',
+        businessValue: 'Reduzir abandono e custos de aquisiÃ§Ã£o',
         priority: 'High',
         status: 'Exportado',
-        acceptanceCriteria: ['KYC automático', 'Liveness detection', 'Validação CC/Passaporte'],
+        acceptanceCriteria: ['KYC automÃ¡tico', 'Liveness detection', 'ValidaÃ§Ã£o CC/Passaporte'],
         expanded: false,
         features: []
       },
       {
         id: 'EP-002',
         type: 'epic',
-        title: 'Gestão de Cartões',
-        description: 'Controlo total de cartões de débito/crédito',
+        title: 'GestÃ£o de CartÃµes',
+        description: 'Controlo total de cartÃµes de dÃ©bito/crÃ©dito',
         businessValue: 'Autonomia do cliente',
         priority: 'Medium',
         status: 'Exportado',
-        acceptanceCriteria: ['Ativar/desativar cartão', 'Alterar limites', 'Ver PIN'],
+        acceptanceCriteria: ['Ativar/desativar cartÃ£o', 'Alterar limites', 'Ver PIN'],
         expanded: false,
         features: []
       }
@@ -768,10 +770,10 @@ const projectsData: Record<number, any> = {
     createdAt: new Date('2025-09-10'),
     lastExport: new Date('2026-01-02T11:20:00'),
     createdBy: 'Pedro Oliveira',
-    description: 'Plataforma de gestão de ATM Multibanco com integração SIBS',
+    description: 'Plataforma de gestÃ£o de ATM Multibanco com integraÃ§Ã£o SIBS',
     objectives: [
       'Modernizar interface ATM',
-      'Integração com rede Multibanco',
+      'IntegraÃ§Ã£o com rede Multibanco',
       'Conformidade EMV e Chip&PIN'
     ],
     compliance: ['PSD2', 'SIBS', 'Banco de Portugal', 'EMV'],
@@ -783,7 +785,7 @@ const projectsData: Record<number, any> = {
         type: 'epic',
         title: 'Interface ATM Modernizada',
         description: 'Nova UX para terminais ATM',
-        businessValue: 'Melhorar experiência e acessibilidade',
+        businessValue: 'Melhorar experiÃªncia e acessibilidade',
         priority: 'High',
         status: 'Exportado',
         acceptanceCriteria: ['Acessibilidade WCAG 2.1', 'Suporte multi-idioma', 'Timeout seguro'],
@@ -793,12 +795,12 @@ const projectsData: Record<number, any> = {
       {
         id: 'EP-002',
         type: 'epic',
-        title: 'Integração SIBS',
-        description: 'Conexão com rede Multibanco',
-        businessValue: 'Operação na rede nacional',
+        title: 'IntegraÃ§Ã£o SIBS',
+        description: 'ConexÃ£o com rede Multibanco',
+        businessValue: 'OperaÃ§Ã£o na rede nacional',
         priority: 'Critical',
         status: 'Exportado',
-        acceptanceCriteria: ['Protocolo SIBS validado', 'Reconciliação automática', 'Failover'],
+        acceptanceCriteria: ['Protocolo SIBS validado', 'ReconciliaÃ§Ã£o automÃ¡tica', 'Failover'],
         expanded: false,
         features: []
       }
@@ -819,7 +821,7 @@ const projectsData: Record<number, any> = {
     objectives: [
       'Conformidade PSD2 total',
       'APIs para AISP, PISP, CISP',
-      'Segurança OAuth2 + mTLS'
+      'SeguranÃ§a OAuth2 + mTLS'
     ],
     compliance: ['PSD2', 'GDPR', 'SCA', 'OAuth2'],
     qualityScore: 96,
@@ -830,7 +832,7 @@ const projectsData: Record<number, any> = {
         type: 'epic',
         title: 'Account Information Service (AISP)',
         description: 'APIs de consulta de contas para TPP',
-        businessValue: 'Conformidade PSD2 obrigatória',
+        businessValue: 'Conformidade PSD2 obrigatÃ³ria',
         priority: 'Critical',
         status: 'Exportado',
         acceptanceCriteria: ['OAuth2 + mTLS', 'Rate limiting', 'Consent management'],
@@ -841,11 +843,11 @@ const projectsData: Record<number, any> = {
         id: 'EP-002',
         type: 'epic',
         title: 'Payment Initiation Service (PISP)',
-        description: 'APIs de iniciação de pagamentos',
+        description: 'APIs de iniciaÃ§Ã£o de pagamentos',
         businessValue: 'Novos canais de pagamento',
         priority: 'High',
         status: 'Exportado',
-        acceptanceCriteria: ['SCA obrigatória', 'Webhook confirmação', 'Idempotência'],
+        acceptanceCriteria: ['SCA obrigatÃ³ria', 'Webhook confirmaÃ§Ã£o', 'IdempotÃªncia'],
         expanded: false,
         features: []
       }
@@ -853,7 +855,7 @@ const projectsData: Record<number, any> = {
   },
   6: {
     id: 6,
-    name: 'Portal Backoffice Operações',
+    name: 'Portal Backoffice OperaÃ§Ãµes',
     code: 'BACKOPS-2024',
     department: 'Operations',
     type: 'Backoffice',
@@ -862,11 +864,11 @@ const projectsData: Record<number, any> = {
     createdAt: new Date('2025-07-15'),
     lastExport: new Date('2025-12-20T15:30:00'),
     createdBy: 'Carlos Mendes',
-    description: 'Portal interno para operadores de backoffice processar operações e reclamações',
+    description: 'Portal interno para operadores de backoffice processar operaÃ§Ãµes e reclamaÃ§Ãµes',
     objectives: [
-      'Processar operações de clientes',
-      'Gestão de reclamações',
-      'Reports regulamentares automáticos'
+      'Processar operaÃ§Ãµes de clientes',
+      'GestÃ£o de reclamaÃ§Ãµes',
+      'Reports regulamentares automÃ¡ticos'
     ],
     compliance: ['GDPR', 'Banco de Portugal', 'AML', 'Audit Trail'],
     qualityScore: 94,
@@ -875,24 +877,24 @@ const projectsData: Record<number, any> = {
       {
         id: 'EP-001',
         type: 'epic',
-        title: 'Processamento de Operações',
-        description: 'Ferramentas para operadores processarem operações',
-        businessValue: 'Eficiência operacional',
+        title: 'Processamento de OperaÃ§Ãµes',
+        description: 'Ferramentas para operadores processarem operaÃ§Ãµes',
+        businessValue: 'EficiÃªncia operacional',
         priority: 'High',
         status: 'Exportado',
-        acceptanceCriteria: ['Interface rápida', 'Validações automáticas', 'Histórico completo'],
+        acceptanceCriteria: ['Interface rÃ¡pida', 'ValidaÃ§Ãµes automÃ¡ticas', 'HistÃ³rico completo'],
         expanded: false,
         features: []
       },
       {
         id: 'EP-002',
         type: 'epic',
-        title: 'Gestão de Reclamações',
-        description: 'Workflow de tratamento de reclamações',
+        title: 'GestÃ£o de ReclamaÃ§Ãµes',
+        description: 'Workflow de tratamento de reclamaÃ§Ãµes',
         businessValue: 'Conformidade Banco de Portugal',
         priority: 'Medium',
         status: 'Exportado',
-        acceptanceCriteria: ['SLA tracking', 'Templates de resposta', 'Escalação automática'],
+        acceptanceCriteria: ['SLA tracking', 'Templates de resposta', 'EscalaÃ§Ã£o automÃ¡tica'],
         expanded: false,
         features: []
       }
@@ -903,6 +905,8 @@ const projectsData: Record<number, any> = {
 export function ProjectView({ onNavigate, projectId }: ProjectViewProps = {}) {
   const navigate = useNavigate();
   const params = useParams<{ projectId: string }>();
+  const { agentService } = useAgent();
+  const { logAction } = useAudit();
   const effectiveProjectId = projectId ?? (params.projectId ? Number(params.projectId) : null);
 
   const navigateByView = (view: View) => {
@@ -931,6 +935,7 @@ export function ProjectView({ onNavigate, projectId }: ProjectViewProps = {}) {
   });
   const [showAllDetails, setShowAllDetails] = useState(true);
   const [activeTab, setActiveTab] = useState('structure');
+  const [isExporting, setIsExporting] = useState(false);
 
   if (!project) {
     return (
@@ -939,7 +944,7 @@ export function ProjectView({ onNavigate, projectId }: ProjectViewProps = {}) {
           <ArrowLeft className="w-4 h-4" />
           Voltar ao Dashboard
         </Button>
-        <p className="mt-4 text-slate-600">Projeto não encontrado</p>
+        <p className="mt-4 text-slate-600">Projeto nÃ£o encontrado</p>
       </div>
     );
   }
@@ -1012,6 +1017,43 @@ export function ProjectView({ onNavigate, projectId }: ProjectViewProps = {}) {
     }).format(date);
   };
 
+  const handleExport = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    try {
+      const response = await agentService.exportToplatform(
+        project.structure,
+        project.platform,
+        project.code
+      );
+      logAction({
+        action: 'Exportacao executada',
+        actionType: 'export',
+        user: 'Susana Gamito',
+        userInitials: 'SG',
+        project: project.code,
+        projectName: project.name,
+        details: `${response.data.itemsExported} itens exportados para ${project.platform}`,
+        status: 'success',
+      });
+      window.alert(`Exportacao concluida com sucesso: ${response.data.itemsExported} itens.`);
+    } catch (error) {
+      logAction({
+        action: 'Falha na exportacao',
+        actionType: 'export',
+        user: 'Susana Gamito',
+        userInitials: 'SG',
+        project: project.code,
+        projectName: project.name,
+        details: error instanceof Error ? error.message : 'Erro desconhecido',
+        status: 'error',
+      });
+      window.alert('Falha na exportacao. Verifique a configuracao do provider de agentes.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="h-full flex flex-col bg-slate-50">
       {/* Header */}
@@ -1053,10 +1095,7 @@ export function ProjectView({ onNavigate, projectId }: ProjectViewProps = {}) {
               </div>
               
               <div className="flex items-center gap-2">
-                <Button variant="outline" className="gap-2">
-                  <Download className="w-4 h-4" />
-                  Exportar
-                </Button>
+                <Button variant="outline" className="gap-2" onClick={handleExport} disabled={isExporting}>`n                  <Download className="w-4 h-4" />`n                  {isExporting ? 'A exportar...' : 'Exportar'}`n                </Button>
                 <a
                   href={project.url}
                   target="_blank"
@@ -1073,10 +1112,28 @@ export function ProjectView({ onNavigate, projectId }: ProjectViewProps = {}) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem>Histórico de Versões</DropdownMenuItem>
-                    <DropdownMenuItem>Duplicar Projeto</DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={async () => {
+                        const result = await agentService.generateVersionDiff(
+                          project.structure,
+                          project.structure,
+                          project.version
+                        );
+                        window.alert(`Historico de versoes: ${result.data.previousVersion} -> ${result.data.nextVersion}`);
+                      }}
+                    >
+                      Histórico de Versões
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        navigator.clipboard?.writeText(project.code);
+                        window.alert(`Projeto ${project.code} preparado para duplicacao.`);
+                      }}
+                    >
+                      Duplicar Projeto
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem>Exportar Novamente</DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleExport}>Exportar Novamente</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -1175,9 +1232,9 @@ export function ProjectView({ onNavigate, projectId }: ProjectViewProps = {}) {
             <div className="flex items-center justify-between">
               <TabsList>
                 <TabsTrigger value="structure">Estrutura Completa</TabsTrigger>
-                <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+                <TabsTrigger value="overview">VisÃ£o Geral</TabsTrigger>
                 <TabsTrigger value="compliance">Compliance</TabsTrigger>
-                <TabsTrigger value="exports">Histórico Exportações</TabsTrigger>
+                <TabsTrigger value="exports">HistÃ³rico ExportaÃ§Ãµes</TabsTrigger>
               </TabsList>
 
               <Button 
@@ -1237,7 +1294,7 @@ export function ProjectView({ onNavigate, projectId }: ProjectViewProps = {}) {
 
             <TabsContent value="exports">
               <Card className="p-6 border-slate-200">
-                <p className="text-slate-600">Histórico de exportações para {project.platform}</p>
+                <p className="text-slate-600">HistÃ³rico de exportaÃ§Ãµes para {project.platform}</p>
               </Card>
             </TabsContent>
           </Tabs>
@@ -1247,7 +1304,7 @@ export function ProjectView({ onNavigate, projectId }: ProjectViewProps = {}) {
   );
 }
 
-// Componente Epic Card (hierárquico)
+// Componente Epic Card (hierÃ¡rquico)
 function EpicCard({ epic, expanded, onToggle, expandedItems, onToggleItem, showAllDetails, getPriorityColor, getTestTypeColor }: any) {
   return (
     <Card className="overflow-hidden border-slate-200">
@@ -1277,7 +1334,7 @@ function EpicCard({ epic, expanded, onToggle, expandedItems, onToggleItem, showA
                 <div className="flex items-start gap-2">
                   <Tag className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-sm font-medium text-slate-700">Valor de Negócio:</p>
+                    <p className="text-sm font-medium text-slate-700">Valor de NegÃ³cio:</p>
                     <p className="text-sm text-slate-600">{epic.businessValue}</p>
                   </div>
                 </div>
@@ -1286,11 +1343,11 @@ function EpicCard({ epic, expanded, onToggle, expandedItems, onToggleItem, showA
                   <div className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
                     <div>
-                      <p className="text-sm font-medium text-slate-700 mb-1">Critérios de Aceitação:</p>
+                      <p className="text-sm font-medium text-slate-700 mb-1">CritÃ©rios de AceitaÃ§Ã£o:</p>
                       <ul className="text-sm text-slate-600 space-y-1">
                         {epic.acceptanceCriteria.map((criteria: string, idx: number) => (
                           <li key={idx} className="flex items-start gap-2">
-                            <span className="text-blue-600">•</span>
+                            <span className="text-blue-600">â€¢</span>
                             {criteria}
                           </li>
                         ))}
@@ -1358,11 +1415,11 @@ function FeatureCard({ feature, epicId, expanded, onToggle, expandedItems, onTog
 
             {showAllDetails && feature.businessRules && feature.businessRules.length > 0 && (
               <div className="ml-6 mt-3 p-3 bg-white rounded border border-purple-200">
-                <p className="text-xs font-medium text-purple-900 mb-2">Regras de Negócio:</p>
+                <p className="text-xs font-medium text-purple-900 mb-2">Regras de NegÃ³cio:</p>
                 <ul className="text-xs text-slate-600 space-y-1">
                   {feature.businessRules.map((rule: string, idx: number) => (
                     <li key={idx} className="flex items-start gap-2">
-                      <span className="text-purple-600">▪</span>
+                      <span className="text-purple-600">â–ª</span>
                       {rule}
                     </li>
                   ))}
@@ -1437,7 +1494,7 @@ function UserStoryCard({ userStory, expanded, onToggle, showAllDetails, getPrior
                   <div className="p-3 bg-white rounded-lg border border-green-200">
                     <p className="text-xs font-medium text-green-900 mb-2 flex items-center gap-2">
                       <CheckCircle2 className="w-4 h-4" />
-                      Critérios de Aceitação:
+                      CritÃ©rios de AceitaÃ§Ã£o:
                     </p>
                     <ul className="text-xs text-slate-600 space-y-1.5">
                       {userStory.acceptanceCriteria.map((criteria: string, idx: number) => (
@@ -1456,7 +1513,7 @@ function UserStoryCard({ userStory, expanded, onToggle, showAllDetails, getPrior
                     <div className="flex items-center gap-2 mb-3">
                       <CheckSquare className="w-4 h-4 text-orange-600" />
                       <span className="text-xs font-medium text-orange-900">
-                        Tasks Técnicas ({userStory.tasks.length})
+                        Tasks TÃ©cnicas ({userStory.tasks.length})
                       </span>
                     </div>
                     <div className="space-y-2">
@@ -1472,7 +1529,7 @@ function UserStoryCard({ userStory, expanded, onToggle, showAllDetails, getPrior
                               {task.technicalNotes && (
                                 <div className="p-2 bg-slate-50 rounded border border-slate-200 mb-2">
                                   <p className="text-xs text-slate-700">
-                                    <span className="font-medium">Notas técnicas:</span> {task.technicalNotes}
+                                    <span className="font-medium">Notas tÃ©cnicas:</span> {task.technicalNotes}
                                   </p>
                                 </div>
                               )}
@@ -1529,7 +1586,7 @@ function UserStoryCard({ userStory, expanded, onToggle, showAllDetails, getPrior
                           <div className="text-xs space-y-2">
                             {tc.preconditions && tc.preconditions.length > 0 && (
                               <div>
-                                <p className="font-medium text-slate-700 mb-1">Pré-condições:</p>
+                                <p className="font-medium text-slate-700 mb-1">PrÃ©-condiÃ§Ãµes:</p>
                                 <ul className="text-slate-600 space-y-0.5 pl-4">
                                   {tc.preconditions.map((pre: string, idx: number) => (
                                     <li key={idx} className="list-disc">{pre}</li>
@@ -1581,3 +1638,4 @@ function UserStoryCard({ userStory, expanded, onToggle, showAllDetails, getPrior
     </div>
   );
 }
+

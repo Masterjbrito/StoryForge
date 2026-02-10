@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+﻿import { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft,
@@ -29,6 +29,8 @@ import { Progress } from '../ui/progress';
 import { Separator } from '../ui/separator';
 import { ScrollArea } from '../ui/scroll-area';
 import { Label } from '../ui/label';
+import { useAgent } from '@/contexts/AgentContext';
+import { useAudit } from '@/contexts/AuditContext';
 
 type View = 
   | 'dashboard' 
@@ -50,6 +52,8 @@ export function ProjectBuilder({ onNavigate, projectData, onFinish }: ProjectBui
   const navigate = useNavigate();
   const location = useLocation();
   const effectiveProjectData = projectData ?? (location.state as any)?.projectData ?? null;
+  const { agentService, provider } = useAgent();
+  const { logAction } = useAudit();
 
   const navigateByView = (view: View) => {
     if (onNavigate) {
@@ -81,21 +85,22 @@ export function ProjectBuilder({ onNavigate, projectData, onFinish }: ProjectBui
   const [userInput, setUserInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [isAgentBusy, setIsAgentBusy] = useState(false);
   const [selectedArtifact, setSelectedArtifact] = useState<any>(null);
   const [conversation, setConversation] = useState<any[]>([
     {
       role: 'assistant',
-      content: 'Olá! Vou ajudá-lo a criar uma estrutura completa de requisitos para o projeto **Sistema de Pagamentos MB Way**. Vou fazer perguntas organizadas em 6 categorias para garantir que nada fica por documentar.',
+      content: 'OlÃ¡! Vou ajudÃ¡-lo a criar uma estrutura completa de requisitos para o projeto **Sistema de Pagamentos MB Way**. Vou fazer perguntas organizadas em 6 categorias para garantir que nada fica por documentar.',
       timestamp: new Date()
     },
     {
       role: 'assistant',
-      content: 'Vamos começar pela categoria **Personas e Utilizadores** (1/6). Esta informação é fundamental para criar User Stories relevantes.',
+      content: 'Vamos comeÃ§ar pela categoria **Personas e Utilizadores** (1/6). Esta informaÃ§Ã£o Ã© fundamental para criar User Stories relevantes.',
       timestamp: new Date()
     },
     {
       role: 'assistant',
-      content: '**Pergunta 1 de 6:** Quem são os utilizadores principais deste sistema? Descreva os perfis típicos que vão usar a aplicação MB Way.',
+      content: '**Pergunta 1 de 6:** Quem sÃ£o os utilizadores principais deste sistema? Descreva os perfis tÃ­picos que vÃ£o usar a aplicaÃ§Ã£o MB Way.',
       timestamp: new Date(),
       categoryIndex: 0,
       questionIndex: 0
@@ -108,19 +113,19 @@ export function ProjectBuilder({ onNavigate, projectData, onFinish }: ProjectBui
       id: 'US-001',
       title: 'Login com Biometria',
       confidence: 95,
-      source: 'Inferido das respostas sobre autenticação'
+      source: 'Inferido das respostas sobre autenticaÃ§Ã£o'
     },
     {
       type: 'feature',
       id: 'FT-001',
-      title: 'Autenticação PSD2',
+      title: 'AutenticaÃ§Ã£o PSD2',
       confidence: 98,
       source: 'Requisito de compliance mencionado'
     },
     {
       type: 'epic',
       id: 'EP-001',
-      title: 'Segurança Bancária',
+      title: 'SeguranÃ§a BancÃ¡ria',
       confidence: 100,
       source: 'Categoria de compliance'
     }
@@ -130,13 +135,13 @@ export function ProjectBuilder({ onNavigate, projectData, onFinish }: ProjectBui
     {
       id: 'personas',
       title: 'Personas e Utilizadores',
-      icon: '👥',
+      icon: 'ðŸ‘¥',
       total: 6,
       questions: [
-        'Quem são os utilizadores principais deste sistema?',
-        'Quais são os objetivos e necessidades de cada persona?',
+        'Quem sÃ£o os utilizadores principais deste sistema?',
+        'Quais sÃ£o os objetivos e necessidades de cada persona?',
         'Que pain points enfrentam atualmente?',
-        'Qual o nível de literacia digital esperado?',
+        'Qual o nÃ­vel de literacia digital esperado?',
         'Quais os contextos de uso principais (mobile, desktop, ATM)?',
         'Existem personas internas (backoffice, compliance)?'
       ]
@@ -144,71 +149,71 @@ export function ProjectBuilder({ onNavigate, projectData, onFinish }: ProjectBui
     {
       id: 'journeys',
       title: 'Jornadas de Utilizador',
-      icon: '🗺️',
+      icon: 'ðŸ—ºï¸',
       total: 5,
       questions: [
-        'Descreva o fluxo principal (happy path) da aplicação',
-        'Quais são os pontos de entrada alternativos?',
-        'Que cenários de erro devem ser contemplados?',
-        'Existem jornadas secundárias importantes?',
-        'Como funciona a navegação entre módulos?'
+        'Descreva o fluxo principal (happy path) da aplicaÃ§Ã£o',
+        'Quais sÃ£o os pontos de entrada alternativos?',
+        'Que cenÃ¡rios de erro devem ser contemplados?',
+        'Existem jornadas secundÃ¡rias importantes?',
+        'Como funciona a navegaÃ§Ã£o entre mÃ³dulos?'
       ]
     },
     {
       id: 'business-rules',
-      title: 'Regras de Negócio',
-      icon: '⚖️',
+      title: 'Regras de NegÃ³cio',
+      icon: 'âš–ï¸',
       total: 5,
       questions: [
-        'Quais são as regras de validação de dados críticas?',
-        'Existem limites operacionais (valores, frequência)?',
-        'Como funcionam os cálculos e algoritmos de negócio?',
-        'Que condições acionam notificações ou alertas?',
-        'Quais são as regras de compliance e regulação aplicáveis?'
+        'Quais sÃ£o as regras de validaÃ§Ã£o de dados crÃ­ticas?',
+        'Existem limites operacionais (valores, frequÃªncia)?',
+        'Como funcionam os cÃ¡lculos e algoritmos de negÃ³cio?',
+        'Que condiÃ§Ãµes acionam notificaÃ§Ãµes ou alertas?',
+        'Quais sÃ£o as regras de compliance e regulaÃ§Ã£o aplicÃ¡veis?'
       ]
     },
     {
       id: 'exceptions',
-      title: 'Exceções e Casos Limite',
-      icon: '⚠️',
+      title: 'ExceÃ§Ãµes e Casos Limite',
+      icon: 'âš ï¸',
       total: 4,
       questions: [
-        'O que acontece quando dados estão indisponíveis?',
+        'O que acontece quando dados estÃ£o indisponÃ­veis?',
         'Como tratar timeouts de APIs externas (SIBS, Banco de Portugal)?',
-        'Que fazer em caso de falha de pagamento ou transação?',
+        'Que fazer em caso de falha de pagamento ou transaÃ§Ã£o?',
         'Como lidar com utilizadores bloqueados ou suspensos?'
       ]
     },
     {
       id: 'compliance',
-      title: 'Compliance e Segurança',
-      icon: '🛡️',
+      title: 'Compliance e SeguranÃ§a',
+      icon: 'ðŸ›¡ï¸',
       total: 4,
       questions: [
         'Que requisitos PSD2 devem ser cumpridos?',
         'Como implementar Strong Customer Authentication (SCA)?',
-        'Quais os logs de auditoria necessários (Banco de Portugal)?',
+        'Quais os logs de auditoria necessÃ¡rios (Banco de Portugal)?',
         'Que medidas anti-fraude devem ser implementadas?'
       ]
     },
     {
       id: 'testing',
-      title: 'Testes e Validação',
-      icon: '🧪',
+      title: 'Testes e ValidaÃ§Ã£o',
+      icon: 'ðŸ§ª',
       total: 4,
       questions: [
-        'Que cenários de teste são prioritários?',
+        'Que cenÃ¡rios de teste sÃ£o prioritÃ¡rios?',
         'Quais os requisitos de performance esperados (SLA)?',
-        'Que testes de segurança devem ser executados?',
-        'Como validar compliance com regulação bancária?'
+        'Que testes de seguranÃ§a devem ser executados?',
+        'Como validar compliance com regulaÃ§Ã£o bancÃ¡ria?'
       ]
     }
   ];
 
-  const handleSendMessage = () => {
-    if (!userInput.trim()) return;
+  const handleSendMessage = async () => {
+    if (!userInput.trim() || isAgentBusy) return;
+    setIsAgentBusy(true);
 
-    // Add user message
     const newConversation = [
       ...conversation,
       {
@@ -219,49 +224,81 @@ export function ProjectBuilder({ onNavigate, projectData, onFinish }: ProjectBui
     ];
 
     setConversation(newConversation);
-    
+
     const nextQuestionIndex = currentQuestionIndex + 1;
     const currentCategory = categories[currentCategoryIndex];
+    const aiMessages: any[] = [
+      {
+        role: 'assistant',
+        content: 'Excelente! Identifiquei novos artefactos com base na sua resposta.',
+        timestamp: new Date(),
+        artifacts: [
+          { type: 'User Stories', count: 2 },
+          { type: 'Features', count: 1 }
+        ]
+      }
+    ];
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiMessages: any[] = [
+    try {
+      const response = await agentService.generateNextQuestion(
+        currentCategory.title,
+        [],
         {
-          role: 'assistant',
-          content: 'Excelente! Identifiquei **2 User Stories** e **1 Feature** com base na sua resposta. Veja os artefactos gerados no painel da direita.',
-          timestamp: new Date(),
-          artifacts: [
-            { type: 'User Stories', count: 2 },
-            { type: 'Features', count: 1 }
-          ]
+          name: effectiveProjectData?.name || 'Novo Projeto',
+          code: effectiveProjectData?.code || 'PROJ-NEW',
+          department: effectiveProjectData?.department || 'Digital',
+          type: effectiveProjectData?.type || 'Mobile Banking',
+          description: effectiveProjectData?.objective || '',
+          businessContext: effectiveProjectData?.objective || '',
+          targetAudience: effectiveProjectData?.channel || 'Particulares',
+          channels: effectiveProjectData?.types || [],
+          existingSystems: effectiveProjectData?.systems || '',
+          complianceFrameworks: effectiveProjectData?.compliance || [],
+          securityRequirements: [],
+          dataClassification: 'Confidencial',
+          coreSystemIntegrations: effectiveProjectData?.core ? [effectiveProjectData.core] : [],
+          externalAPIs: effectiveProjectData?.apis ? [effectiveProjectData.apis] : [],
+          targetPlatform: effectiveProjectData?.platform || 'Jira Cloud',
+          uploadedDocuments: [],
+          referenceLinks: effectiveProjectData?.links ? [effectiveProjectData.links] : [],
+          aiMode: 'rigorous',
+          questionDepth: 'deep',
+          autoCompliance: true,
         }
-      ];
+      );
 
-      // Check if there are more questions in current category
+      logAction({
+        action: 'Interacao com Questionnaire Agent',
+        actionType: 'ai',
+        user: 'Susana Gamito',
+        userInitials: 'SG',
+        project: effectiveProjectData?.code || null,
+        projectName: effectiveProjectData?.name || null,
+        details: `Categoria: ${currentCategory.title}`,
+        status: 'success',
+      });
+
       if (nextQuestionIndex < currentCategory.total) {
-        // Next question in same category
         aiMessages.push({
           role: 'assistant',
-          content: `**Pergunta ${nextQuestionIndex + 1} de ${currentCategory.total}:** ${currentCategory.questions[nextQuestionIndex]}`,
+          content: `**Pergunta ${nextQuestionIndex + 1} de ${currentCategory.total}:** ${response?.data?.content || currentCategory.questions[nextQuestionIndex]}`,
           timestamp: new Date(),
           categoryIndex: currentCategoryIndex,
           questionIndex: nextQuestionIndex
         });
         setCurrentQuestionIndex(nextQuestionIndex);
       } else {
-        // Category completed
         aiMessages.push({
           role: 'assistant',
-          content: `✅ **Categoria "${currentCategory.title}" concluída!** Todas as ${currentCategory.total} perguntas foram respondidas.`,
+          content: `Categoria "${currentCategory.title}" concluida.`,
           timestamp: new Date()
         });
 
-        // Check if there are more categories
         if (currentCategoryIndex < categories.length - 1) {
           const nextCategory = categories[currentCategoryIndex + 1];
           aiMessages.push({
             role: 'assistant',
-            content: `Vamos avançar para a próxima categoria: **${nextCategory.title}** (${currentCategoryIndex + 2}/6). ${getCategoryIntro(currentCategoryIndex + 1)}`,
+            content: `Vamos avancar para ${nextCategory.title}. ${getCategoryIntro(currentCategoryIndex + 1)}`,
             timestamp: new Date()
           });
           aiMessages.push({
@@ -274,26 +311,35 @@ export function ProjectBuilder({ onNavigate, projectData, onFinish }: ProjectBui
           setCurrentCategoryIndex(currentCategoryIndex + 1);
           setCurrentQuestionIndex(0);
         } else {
-          // All done
           aiMessages.push({
             role: 'assistant',
-            content: '🎉 **Parabéns!** Concluímos todas as 6 categorias e 24 perguntas. A estrutura completa do projeto está pronta para revisão e exportação.',
+            content: 'Concluimos as categorias. Pode finalizar e exportar.',
             timestamp: new Date()
           });
         }
       }
+    } catch (error) {
+      logAction({
+        action: 'Falha no Questionnaire Agent',
+        actionType: 'ai',
+        user: 'Susana Gamito',
+        userInitials: 'SG',
+        project: effectiveProjectData?.code || null,
+        projectName: effectiveProjectData?.name || null,
+        details: error instanceof Error ? error.message : 'Erro desconhecido',
+        status: 'warning',
+      });
+    }
 
-      setConversation([...newConversation, ...aiMessages]);
-    }, 1000);
-
+    setConversation([...newConversation, ...aiMessages]);
     setUserInput('');
+    setIsAgentBusy(false);
   };
-
   const getCategoryIntro = (categoryIndex: number) => {
     const intros = [
       'Esta categoria ajuda-nos a mapear todos os fluxos de utilizador.',
-      'Agora vamos definir as regras críticas de negócio.',
-      'É importante identificar cenários de exceção e edge cases.',
+      'Agora vamos definir as regras crÃ­ticas de negÃ³cio.',
+      'Ã‰ importante identificar cenÃ¡rios de exceÃ§Ã£o e edge cases.',
       'Vamos validar as User Stories geradas automaticamente.',
       'Por fim, vamos garantir cobertura de testes adequada.'
     ];
@@ -317,7 +363,7 @@ export function ProjectBuilder({ onNavigate, projectData, onFinish }: ProjectBui
         status = 'completed';
       } else if (idx === currentCategoryIndex) {
         // Categoria atual - progresso real
-        completed = currentQuestionIndex + 1; // +1 porque já respondemos à primeira pergunta
+        completed = currentQuestionIndex + 1; // +1 porque jÃ¡ respondemos Ã  primeira pergunta
         status = completed === cat.total ? 'completed' : 'in-progress';
       } else {
         // Categorias futuras - 0%
@@ -342,8 +388,8 @@ export function ProjectBuilder({ onNavigate, projectData, onFinish }: ProjectBui
   const overallProgress = Math.round((totalAnswered / totalQuestions) * 100);
 
   const suggestions = [
-    'Clientes particulares que fazem transferências frequentes',
-    'Empresários que precisam de gestão de pagamentos',
+    'Clientes particulares que fazem transferÃªncias frequentes',
+    'EmpresÃ¡rios que precisam de gestÃ£o de pagamentos',
     'Utilizadores seniores com menor literacia digital'
   ];
 
@@ -411,7 +457,7 @@ export function ProjectBuilder({ onNavigate, projectData, onFinish }: ProjectBui
           <div className="flex items-center gap-3">
             <Badge variant="secondary" className="gap-2">
               <Sparkles className="w-3 h-3" />
-              Modo: Rigor Bancário
+              Provider: {provider}
             </Badge>
             <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowPreview(true)}>
               <Eye className="w-4 h-4" />
@@ -450,7 +496,7 @@ export function ProjectBuilder({ onNavigate, projectData, onFinish }: ProjectBui
         {/* Left Column - Categories & Progress */}
         <div className="w-80 bg-white border-r border-slate-200 flex flex-col overflow-hidden">
           <div className="p-6 border-b border-slate-200 flex-shrink-0">
-            <h2 className="text-sm font-semibold text-slate-900 mb-1">Categorias de Análise</h2>
+            <h2 className="text-sm font-semibold text-slate-900 mb-1">Categorias de AnÃ¡lise</h2>
             <p className="text-xs text-slate-600">6 categorias de perguntas estruturadas</p>
           </div>
 
@@ -497,7 +543,7 @@ export function ProjectBuilder({ onNavigate, projectData, onFinish }: ProjectBui
               <div>
                 <p className="text-xs font-medium text-blue-900 mb-1">Dica Inteligente</p>
                 <p className="text-xs text-blue-700">
-                  Responda com o máximo de detalhe possível. A IA vai usar as suas respostas para gerar User Stories, Tasks e Test Cases.
+                  Responda com o mÃ¡ximo de detalhe possÃ­vel. A IA vai usar as suas respostas para gerar User Stories, Tasks e Test Cases.
                 </p>
               </div>
             </div>
@@ -566,7 +612,7 @@ export function ProjectBuilder({ onNavigate, projectData, onFinish }: ProjectBui
                 <div className="mb-3">
                   <p className="text-xs text-slate-600 mb-2 flex items-center gap-1">
                     <Lightbulb className="w-3 h-3" />
-                    Sugestões:
+                    SugestÃµes:
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {suggestions.map((suggestion, idx) => (
@@ -670,7 +716,7 @@ export function ProjectBuilder({ onNavigate, projectData, onFinish }: ProjectBui
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-xs font-mono text-slate-600">{artifact.id}</span>
                           <Badge variant="outline" className="text-xs">
-                            {artifact.confidence}% confiança
+                            {artifact.confidence}% confianÃ§a
                           </Badge>
                         </div>
                         <p className="text-sm font-medium text-slate-900 mb-1">{artifact.title}</p>
@@ -693,15 +739,15 @@ export function ProjectBuilder({ onNavigate, projectData, onFinish }: ProjectBui
                         size="sm" 
                         className="h-7 text-xs flex-1"
                         onClick={() => {
-                          alert(`✏️ A editar artefacto:\\n\\n` +
+                          alert(`âœï¸ A editar artefacto:\\n\\n` +
                                 `ID: ${artifact.id}\\n` +
                                 `Tipo: ${artifact.type}\\n` +
-                                `Título: ${artifact.title}\\n\\n` +
+                                `TÃ­tulo: ${artifact.title}\\n\\n` +
                                 `Esta funcionalidade permitiria editar:\\n` +
-                                `• Título e descrição\\n` +
-                                `• Critérios de aceitação\\n` +
-                                `• Story points / complexidade\\n` +
-                                `• Tags e labels`);
+                                `â€¢ TÃ­tulo e descriÃ§Ã£o\\n` +
+                                `â€¢ CritÃ©rios de aceitaÃ§Ã£o\\n` +
+                                `â€¢ Story points / complexidade\\n` +
+                                `â€¢ Tags e labels`);
                         }}
                       >
                         Editar
@@ -747,9 +793,9 @@ export function ProjectBuilder({ onNavigate, projectData, onFinish }: ProjectBui
               <div className="flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-xs font-medium text-amber-900 mb-1">Atenção</p>
+                  <p className="text-xs font-medium text-amber-900 mb-1">AtenÃ§Ã£o</p>
                   <p className="text-xs text-amber-700">
-                    Faltam cenários de teste para autenticação SCA. Recomendo adicionar na categoria de Testes.
+                    Faltam cenÃ¡rios de teste para autenticaÃ§Ã£o SCA. Recomendo adicionar na categoria de Testes.
                   </p>
                 </div>
               </div>
@@ -778,36 +824,36 @@ export function ProjectBuilder({ onNavigate, projectData, onFinish }: ProjectBui
               <Card className="p-4 bg-blue-50 text-blue-700 border-blue-200">
                 <h3 className="text-sm font-medium mb-2">Epics (3)</h3>
                 <ul className="text-xs space-y-1">
-                  <li>• EP-001: Segurança Bancária</li>
-                  <li>• EP-002: Gestão de Pagamentos</li>
-                  <li>• EP-003: Experiência de Utilizador</li>
+                  <li>â€¢ EP-001: SeguranÃ§a BancÃ¡ria</li>
+                  <li>â€¢ EP-002: GestÃ£o de Pagamentos</li>
+                  <li>â€¢ EP-003: ExperiÃªncia de Utilizador</li>
                 </ul>
               </Card>
               <Card className="p-4 bg-purple-50 text-purple-700 border-purple-200">
                 <h3 className="text-sm font-medium mb-2">Features (8)</h3>
                 <ul className="text-xs space-y-1">
-                  <li>• FT-001: Autenticação PSD2</li>
-                  <li>• FT-002: Transferências Instantâneas</li>
-                  <li>• FT-003: Gestão de Beneficiários</li>
-                  <li>• FT-004: Notificações Push</li>
-                  <li>• FT-005: Histórico de Transações</li>
+                  <li>â€¢ FT-001: AutenticaÃ§Ã£o PSD2</li>
+                  <li>â€¢ FT-002: TransferÃªncias InstantÃ¢neas</li>
+                  <li>â€¢ FT-003: GestÃ£o de BeneficiÃ¡rios</li>
+                  <li>â€¢ FT-004: NotificaÃ§Ãµes Push</li>
+                  <li>â€¢ FT-005: HistÃ³rico de TransaÃ§Ãµes</li>
                   <li className="text-xs text-purple-600">+ 3 more...</li>
                 </ul>
               </Card>
               <Card className="p-4 bg-green-50 text-green-700 border-green-200">
                 <h3 className="text-sm font-medium mb-2">User Stories (24)</h3>
                 <ul className="text-xs space-y-1">
-                  <li>• US-001: Login com Biometria</li>
-                  <li>• US-002: Validação de Identidade</li>
-                  <li>• US-003: Transferência entre Contas</li>
-                  <li>• US-004: Confirmação por SMS</li>
-                  <li>• US-005: Adicionar Beneficiário</li>
+                  <li>â€¢ US-001: Login com Biometria</li>
+                  <li>â€¢ US-002: ValidaÃ§Ã£o de Identidade</li>
+                  <li>â€¢ US-003: TransferÃªncia entre Contas</li>
+                  <li>â€¢ US-004: ConfirmaÃ§Ã£o por SMS</li>
+                  <li>â€¢ US-005: Adicionar BeneficiÃ¡rio</li>
                   <li className="text-xs text-green-600">+ 19 more...</li>
                 </ul>
               </Card>
               <Card className="p-4 bg-orange-50 text-orange-700 border-orange-200">
                 <h3 className="text-sm font-medium mb-2">Test Cases (45)</h3>
-                <p className="text-xs">Cenários de teste gerados para garantir cobertura completa de funcionalidades, edge cases e compliance PSD2.</p>
+                <p className="text-xs">CenÃ¡rios de teste gerados para garantir cobertura completa de funcionalidades, edge cases e compliance PSD2.</p>
               </Card>
             </div>
 
@@ -860,30 +906,30 @@ export function ProjectBuilder({ onNavigate, projectData, onFinish }: ProjectBui
 
             <div className="space-y-4">
               <div>
-                <Label className="text-xs font-medium text-slate-700">Descrição</Label>
+                <Label className="text-xs font-medium text-slate-700">DescriÃ§Ã£o</Label>
                 <p className="text-sm text-slate-600 mt-1">
-                  Como utilizador do sistema MB Way, quero fazer login usando biometria (impressão digital ou Face ID) para aceder à aplicação de forma rápida e segura.
+                  Como utilizador do sistema MB Way, quero fazer login usando biometria (impressÃ£o digital ou Face ID) para aceder Ã  aplicaÃ§Ã£o de forma rÃ¡pida e segura.
                 </p>
               </div>
 
               <div>
-                <Label className="text-xs font-medium text-slate-700">Critérios de Aceitação</Label>
+                <Label className="text-xs font-medium text-slate-700">CritÃ©rios de AceitaÃ§Ã£o</Label>
                 <ul className="text-sm text-slate-600 mt-1 space-y-1">
                   <li className="flex items-start gap-2">
-                    <span className="text-green-600 mt-0.5">✓</span>
-                    <span>Sistema deve suportar impressão digital (Touch ID) e reconhecimento facial (Face ID)</span>
+                    <span className="text-green-600 mt-0.5">âœ“</span>
+                    <span>Sistema deve suportar impressÃ£o digital (Touch ID) e reconhecimento facial (Face ID)</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-green-600 mt-0.5">✓</span>
-                    <span>Deve existir fallback para PIN em caso de falha biométrica</span>
+                    <span className="text-green-600 mt-0.5">âœ“</span>
+                    <span>Deve existir fallback para PIN em caso de falha biomÃ©trica</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-green-600 mt-0.5">✓</span>
+                    <span className="text-green-600 mt-0.5">âœ“</span>
                     <span>Cumprimento de requisitos PSD2 para Strong Customer Authentication</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-green-600 mt-0.5">✓</span>
-                    <span>Máximo de 3 tentativas falhadas antes de bloqueio temporário</span>
+                    <span className="text-green-600 mt-0.5">âœ“</span>
+                    <span>MÃ¡ximo de 3 tentativas falhadas antes de bloqueio temporÃ¡rio</span>
                   </li>
                 </ul>
               </div>
@@ -898,7 +944,7 @@ export function ProjectBuilder({ onNavigate, projectData, onFinish }: ProjectBui
                   <Badge className="mt-1 bg-red-100 text-red-700">Alta</Badge>
                 </div>
                 <div>
-                  <Label className="text-xs font-medium text-slate-700">Confiança IA</Label>
+                  <Label className="text-xs font-medium text-slate-700">ConfianÃ§a IA</Label>
                   <p className="text-lg font-semibold text-green-700 mt-1">{selectedArtifact.confidence}%</p>
                 </div>
               </div>
@@ -913,7 +959,7 @@ export function ProjectBuilder({ onNavigate, projectData, onFinish }: ProjectBui
                 <div className="flex flex-wrap gap-2 mt-1">
                   <Badge variant="outline">PSD2</Badge>
                   <Badge variant="outline">Biometria</Badge>
-                  <Badge variant="outline">Autenticação</Badge>
+                  <Badge variant="outline">AutenticaÃ§Ã£o</Badge>
                   <Badge variant="outline">Mobile</Badge>
                 </div>
               </div>
@@ -924,7 +970,7 @@ export function ProjectBuilder({ onNavigate, projectData, onFinish }: ProjectBui
                 size="sm"
                 className="bg-slate-900 hover:bg-slate-800"
                 onClick={() => {
-                  alert('✏️ Modo de edição ativado para ' + selectedArtifact.id);
+                  alert('âœï¸ Modo de ediÃ§Ã£o ativado para ' + selectedArtifact.id);
                   setSelectedArtifact(null);
                 }}
               >
@@ -944,3 +990,4 @@ export function ProjectBuilder({ onNavigate, projectData, onFinish }: ProjectBui
     </div>
   );
 }
+

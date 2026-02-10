@@ -18,6 +18,8 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { Badge } from '../ui/badge';
+import { useAgent } from '@/contexts/AgentContext';
+import { useAudit } from '@/contexts/AuditContext';
 
 type View = 
   | 'dashboard' 
@@ -36,6 +38,8 @@ interface NewProjectProps {
 
 export function NewProject({ onNavigate, onCreate }: NewProjectProps = {}) {
   const navigate = useNavigate();
+  const { agentService } = useAgent();
+  const { logAction } = useAudit();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<any>({});
 
@@ -74,10 +78,55 @@ export function NewProject({ onNavigate, onCreate }: NewProjectProps = {}) {
     { number: 6, title: 'Configuração IA', icon: Settings },
   ];
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep < 6) {
       setCurrentStep(currentStep + 1);
     } else {
+      try {
+        await agentService.analyzeContext({
+          name: formData.name || 'Novo Projeto',
+          code: formData.code || 'PROJ-NEW',
+          department: formData.department || 'Digital',
+          type: formData.types?.[0] || 'Mobile Banking',
+          description: formData.objective || '',
+          businessContext: formData.objective || '',
+          targetAudience: formData.channel || 'Particulares',
+          channels: formData.types || [],
+          existingSystems: formData.systems || '',
+          complianceFrameworks: formData.compliance || [],
+          securityRequirements: [],
+          dataClassification: 'Confidencial',
+          coreSystemIntegrations: formData.core ? [formData.core] : [],
+          externalAPIs: formData.apis ? [formData.apis] : [],
+          targetPlatform: formData.platform || 'Jira Cloud',
+          uploadedDocuments: [],
+          referenceLinks: formData.links ? [formData.links] : [],
+          aiMode: 'rigorous',
+          questionDepth: 'deep',
+          autoCompliance: true,
+        });
+        logAction({
+          action: 'Contexto analisado no Novo Projeto',
+          actionType: 'ai',
+          user: 'Susana Gamito',
+          userInitials: 'SG',
+          project: formData.code || null,
+          projectName: formData.name || null,
+          details: 'Context Ingestor executado antes de iniciar IA Assistant',
+          status: 'success',
+        });
+      } catch (error) {
+        logAction({
+          action: 'Falha no Context Ingestor',
+          actionType: 'ai',
+          user: 'Susana Gamito',
+          userInitials: 'SG',
+          project: formData.code || null,
+          projectName: formData.name || null,
+          details: error instanceof Error ? error.message : 'Erro desconhecido',
+          status: 'warning',
+        });
+      }
       createProject(formData);
     }
   };
