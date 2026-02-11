@@ -5,50 +5,620 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>StoryForge - Executive Presentation</title>
 <style>
-:root{--bg:#081528;--card:#0f223a;--ink:#e5eef8;--muted:#9fb3ca;--line:#2b4261;--acc:#5eead4;--acc2:#93c5fd;}
-*{box-sizing:border-box}
-body{margin:0;background:#020817;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink)}
-.deck{width:1280px;margin:16px auto}
-.slide{position:relative;width:1280px;height:720px;padding:56px 70px;background:radial-gradient(1200px 500px at 90% -10%,#1e3a5f 0,#0b1c31 45%,#071224 100%);border:1px solid #213853;border-radius:16px;overflow:hidden;page-break-after:always;break-after:page;margin-bottom:24px}
-.slide:last-child{page-break-after:auto;break-after:auto}
-.kicker{font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--acc)}
-h1{margin:12px 0 0;font-size:52px;line-height:1.06}
-h2{margin:10px 0 6px;font-size:40px;line-height:1.1}
-h2::after{content:"";display:block;margin-top:10px;height:3px;width:90px;border-radius:2px;background:linear-gradient(90deg,var(--acc),var(--acc2));opacity:.85}
-p{font-size:22px;line-height:1.45;color:var(--muted);max-width:1020px}
-.grid{display:grid;gap:16px}
-.grid-2{grid-template-columns:1fr 1fr}
-.grid-3{grid-template-columns:repeat(3,1fr)}
-.grid-4{grid-template-columns:repeat(4,1fr)}
-.card{background:rgba(11,28,49,.68);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
-.card h3{margin:0 0 8px;font-size:21px;color:var(--ink)}
-.card p,.card li{font-size:17px;color:var(--muted);line-height:1.4}
-ul{margin:6px 0 0 18px}
-.big{font-size:30px;color:var(--acc2);font-weight:700}
-.badge{display:inline-block;padding:5px 10px;border:1px solid var(--line);border-radius:999px;font-size:13px;color:var(--acc);margin-right:8px}
-.badge-done{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:600;background:rgba(94,234,212,.15);color:#5eead4;border:1px solid rgba(94,234,212,.35);margin-left:8px;letter-spacing:.04em}
-.badge-progress{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:600;background:rgba(250,204,21,.12);color:#fbbf24;border:1px solid rgba(250,204,21,.35);margin-left:8px;letter-spacing:.04em}
-.badge-api{display:inline-block;padding:4px 12px;border:1px solid var(--acc);border-radius:999px;font-size:13px;font-weight:600;color:var(--acc);letter-spacing:.06em}
-.footer{position:absolute;bottom:24px;left:70px;right:70px;display:flex;justify-content:space-between;font-size:14px;color:#7f95ad}
-.bar{height:8px;background:#11253e;border-radius:999px;overflow:hidden}
-.fill{height:100%;background:linear-gradient(90deg,#5eead4,#93c5fd)}
-.shot{border:1px solid #395577;border-radius:10px;overflow:hidden;background:#0b1a2b}
-.shot img{display:block;width:100%;height:120px;object-fit:cover}
-.shot span{display:block;padding:6px 8px;font-size:12px;color:#c4d5e8;text-align:center}
-.flow-step{text-align:center;padding:22px 16px;background:rgba(11,28,49,.68);border:1px solid var(--line);border-radius:12px;position:relative}
-.flow-step h3{margin:0 0 6px;font-size:19px;color:var(--ink)}
-.flow-step p{font-size:15px;color:var(--muted);margin:0;max-width:none;line-height:1.35}
-.flow-step .step-num{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#071224;font-weight:700;font-size:15px;margin-bottom:10px}
-.flow-arrow{display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--acc);opacity:.7}
-.agent-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}
-.agent-cell{background:rgba(11,28,49,.68);border:1px solid var(--line);border-radius:10px;padding:12px 14px;text-align:center;font-size:14px;color:var(--ink);font-weight:500;letter-spacing:.02em;transition:border-color .2s}
-.agent-cell:hover{border-color:var(--acc)}
-.agent-cell .agent-icon{display:block;margin:0 auto 6px;font-size:22px;opacity:.8}
-@media print{
- @page{size:landscape;margin:0}
- body{background:#000}
- .deck{margin:0;width:auto}
- .slide{border-radius:0;border:none;margin-bottom:0}
+/* ============================================================
+   StoryForge Executive Presentation  v1.6.0  |  11 Fev 2026
+   Premium visual design  -  1280 x 720 slide deck
+   ============================================================ */
+
+/* --- Design Tokens --- */
+:root {
+  --bg:      #081528;
+  --card:    #0f223a;
+  --ink:     #e5eef8;
+  --muted:   #9fb3ca;
+  --line:    #2b4261;
+  --acc:     #5eead4;
+  --acc2:    #93c5fd;
+  --acc-glow: rgba(94, 234, 212, .25);
+  --acc2-glow: rgba(147, 197, 253, .20);
+  --glass:   rgba(11, 28, 49, .52);
+  --glass-border: rgba(94, 234, 212, .12);
+  --noise:   url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+}
+
+* { box-sizing: border-box; }
+
+/* --- Body & Animated Background --- */
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  color: var(--ink);
+  background: #020817;
+  background-image:
+    radial-gradient(ellipse 1200px 900px at 20% 10%, rgba(94, 234, 212, .06) 0%, transparent 60%),
+    radial-gradient(ellipse 1000px 700px at 80% 90%, rgba(147, 197, 253, .05) 0%, transparent 55%);
+  min-height: 100vh;
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: var(--noise);
+  pointer-events: none;
+  z-index: 9999;
+  opacity: .45;
+}
+
+/* Animated gradient mesh */
+@keyframes meshDrift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(125deg,
+    rgba(94,234,212,.04) 0%,
+    transparent 25%,
+    rgba(147,197,253,.03) 50%,
+    transparent 75%,
+    rgba(94,234,212,.04) 100%);
+  background-size: 400% 400%;
+  animation: meshDrift 20s ease infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* --- Deck --- */
+.deck {
+  width: 1280px;
+  margin: 24px auto;
+  position: relative;
+  z-index: 1;
+}
+
+/* --- Slides --- */
+.slide {
+  position: relative;
+  width: 1280px;
+  height: 720px;
+  padding: 56px 70px;
+  background:
+    radial-gradient(1200px 500px at 90% -10%, #1e3a5f 0, #0b1c31 45%, #071224 100%);
+  border: 1px solid rgba(43, 66, 97, .55);
+  border-radius: 18px;
+  overflow: hidden;
+  page-break-after: always;
+  break-after: page;
+  margin-bottom: 28px;
+  transition: box-shadow .4s ease;
+}
+.slide:last-child {
+  page-break-after: auto;
+  break-after: auto;
+}
+
+/* Noise texture overlay on each slide */
+.slide::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--noise);
+  opacity: .5;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: 18px;
+}
+
+/* Top gradient accent border */
+.slide::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--acc), var(--acc2), var(--acc));
+  border-radius: 18px 18px 0 0;
+  opacity: .85;
+  z-index: 2;
+}
+
+/* Ensure all content is above the noise overlay */
+.slide > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* --- Slide Number Indicator --- */
+.slide-num {
+  position: absolute;
+  top: 22px;
+  right: 30px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: rgba(94, 234, 212, .35);
+  text-transform: uppercase;
+  z-index: 3;
+}
+
+/* --- Typography --- */
+.kicker {
+  font-size: 14px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--acc);
+  font-weight: 600;
+}
+
+h1 {
+  margin: 16px 0 0;
+  font-size: 56px;
+  line-height: 1.06;
+  font-weight: 800;
+  letter-spacing: -.01em;
+  background: linear-gradient(135deg, #ffffff 0%, #c8e0ff 40%, var(--acc) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+/* Decorative gradient line under h1 */
+h1::after {
+  content: "";
+  display: block;
+  margin-top: 16px;
+  height: 4px;
+  width: 120px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--acc), var(--acc2));
+  opacity: .9;
+  /* reset clip for the pseudo element */
+  -webkit-text-fill-color: initial;
+}
+
+h2 {
+  margin: 10px 0 6px;
+  font-size: 40px;
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -.005em;
+}
+h2::after {
+  content: "";
+  display: block;
+  margin-top: 10px;
+  height: 3px;
+  width: 90px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--acc), var(--acc2));
+  opacity: .85;
+}
+
+p {
+  font-size: 22px;
+  line-height: 1.45;
+  color: var(--muted);
+  max-width: 1020px;
+}
+
+/* --- Cards (Glassmorphism) --- */
+.card {
+  background: var(--glass);
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  padding: 20px 22px;
+  transition: box-shadow .35s ease, border-color .35s ease, transform .35s ease;
+}
+.card:hover {
+  box-shadow: 0 0 28px var(--acc-glow), 0 4px 20px rgba(0,0,0,.3);
+  border-color: rgba(94, 234, 212, .28);
+  transform: translateY(-2px);
+}
+.card h3 {
+  margin: 0 0 8px;
+  font-size: 21px;
+  color: var(--ink);
+  font-weight: 700;
+}
+.card p, .card li {
+  font-size: 17px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+/* --- Grids --- */
+.grid { display: grid; gap: 18px; }
+.grid-2 { grid-template-columns: 1fr 1fr; }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+ul { margin: 6px 0 0 18px; }
+
+/* --- Badges --- */
+.big {
+  font-size: 30px;
+  color: var(--acc2);
+  font-weight: 700;
+}
+
+.badge {
+  display: inline-block;
+  padding: 7px 16px;
+  border: 1px solid rgba(94, 234, 212, .30);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--acc);
+  margin-right: 10px;
+  letter-spacing: .04em;
+  background: linear-gradient(135deg, rgba(94, 234, 212, .08), rgba(147, 197, 253, .05));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: box-shadow .3s ease, border-color .3s ease;
+  text-shadow: 0 0 12px rgba(94, 234, 212, .3);
+}
+.badge:hover {
+  box-shadow: 0 0 18px rgba(94, 234, 212, .2);
+  border-color: rgba(94, 234, 212, .5);
+}
+
+.badge-done {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  background: linear-gradient(135deg, rgba(94, 234, 212, .18), rgba(94, 234, 212, .08));
+  color: #5eead4;
+  border: 1px solid rgba(94, 234, 212, .40);
+  margin-left: 8px;
+  letter-spacing: .06em;
+  text-shadow: 0 0 10px rgba(94, 234, 212, .25);
+}
+
+.badge-progress {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  background: linear-gradient(135deg, rgba(250, 204, 21, .15), rgba(250, 204, 21, .06));
+  color: #fbbf24;
+  border: 1px solid rgba(250, 204, 21, .40);
+  margin-left: 8px;
+  letter-spacing: .06em;
+  text-shadow: 0 0 10px rgba(250, 204, 21, .2);
+}
+
+.badge-api {
+  display: inline-block;
+  padding: 5px 14px;
+  border: 1px solid var(--acc);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--acc);
+  letter-spacing: .08em;
+  background: linear-gradient(135deg, rgba(94, 234, 212, .10), rgba(147, 197, 253, .05));
+  text-shadow: 0 0 10px rgba(94, 234, 212, .3);
+}
+
+/* --- Footer with separator --- */
+.footer {
+  position: absolute;
+  bottom: 24px;
+  left: 70px;
+  right: 70px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #7f95ad;
+  z-index: 2;
+  padding-top: 14px;
+  border-top: 1px solid rgba(43, 66, 97, .45);
+}
+
+/* --- Progress Bar with Shimmer --- */
+.bar {
+  height: 8px;
+  background: #11253e;
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+}
+.fill {
+  height: 100%;
+  background: linear-gradient(90deg, #5eead4, #93c5fd);
+  border-radius: 999px;
+  position: relative;
+  overflow: hidden;
+}
+@keyframes shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.25), transparent);
+  animation: shimmer 2.5s ease infinite;
+}
+
+/* --- Screenshot Cards --- */
+.shot {
+  border: 1px solid rgba(57, 85, 119, .6);
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(11, 26, 43, .7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: box-shadow .35s ease, border-color .35s ease, transform .35s ease;
+}
+.shot:hover {
+  box-shadow: 0 0 24px var(--acc2-glow), 0 6px 20px rgba(0,0,0,.25);
+  border-color: rgba(147, 197, 253, .35);
+  transform: translateY(-3px);
+}
+.shot img {
+  display: block;
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  transition: transform .5s ease;
+}
+.shot:hover img {
+  transform: scale(1.05);
+}
+.shot span {
+  display: block;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #c4d5e8;
+  text-align: center;
+  letter-spacing: .02em;
+  background: rgba(7, 18, 36, .5);
+}
+
+/* --- Flow Steps --- */
+.flow-step {
+  text-align: center;
+  padding: 24px 18px;
+  background: var(--glass);
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  position: relative;
+  transition: box-shadow .35s ease, border-color .35s ease, transform .35s ease;
+}
+.flow-step:hover {
+  box-shadow: 0 0 22px var(--acc-glow);
+  border-color: rgba(94, 234, 212, .25);
+  transform: translateY(-2px);
+}
+.flow-step h3 {
+  margin: 0 0 6px;
+  font-size: 19px;
+  color: var(--ink);
+  font-weight: 700;
+}
+.flow-step p {
+  font-size: 15px;
+  color: var(--muted);
+  margin: 0;
+  max-width: none;
+  line-height: 1.35;
+}
+.flow-step .step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--acc), var(--acc2));
+  color: #071224;
+  font-weight: 800;
+  font-size: 15px;
+  margin-bottom: 10px;
+  box-shadow: 0 0 16px rgba(94, 234, 212, .35);
+}
+
+/* Connecting flow arrows with dots */
+.flow-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: var(--acc);
+  opacity: .7;
+  position: relative;
+}
+.flow-arrow::before,
+.flow-arrow::after {
+  content: "";
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--acc);
+  opacity: .5;
+}
+.flow-arrow::before { left: 2px; }
+.flow-arrow::after  { right: 2px; }
+
+/* --- Agent Grid --- */
+.agent-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 18px;
+}
+.agent-cell {
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--ink);
+  font-weight: 600;
+  letter-spacing: .03em;
+  transition: box-shadow .3s ease, border-color .3s ease, transform .3s ease;
+}
+.agent-cell:hover {
+  border-color: rgba(94, 234, 212, .35);
+  box-shadow: 0 0 22px var(--acc-glow);
+  transform: translateY(-2px);
+}
+.agent-cell .agent-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(94, 234, 212, .12), rgba(147, 197, 253, .08));
+  border: 1px solid rgba(94, 234, 212, .15);
+  margin: 0 auto 8px;
+  font-size: 20px;
+  opacity: .9;
+}
+
+/* =============================================
+   SLIDE 00 - Title Slide Hero Layout
+   ============================================= */
+.slide-title {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 60px 80px;
+}
+
+/* Decorative gradient orb */
+.slide-title .hero-orb {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(94,234,212,.12) 0%, rgba(147,197,253,.06) 40%, transparent 70%);
+  top: -120px;
+  right: -80px;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(40px);
+}
+.slide-title .hero-orb-2 {
+  position: absolute;
+  width: 350px;
+  height: 350px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(147,197,253,.10) 0%, rgba(94,234,212,.04) 50%, transparent 70%);
+  bottom: -60px;
+  left: 80px;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(30px);
+}
+
+.slide-title .kicker {
+  font-size: 15px;
+  letter-spacing: .22em;
+  margin-bottom: 4px;
+}
+
+.slide-title h1 {
+  font-size: 60px;
+  line-height: 1.05;
+  max-width: 900px;
+}
+
+.slide-title p {
+  font-size: 22px;
+  max-width: 860px;
+  margin-top: 16px;
+  line-height: 1.5;
+}
+
+.slide-title .badge-row {
+  margin-top: 32px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* --- Section labels --- */
+.section-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: rgba(94, 234, 212, .45);
+  margin-bottom: 2px;
+}
+
+/* =============================================
+   Print Styles
+   ============================================= */
+@media print {
+  @page {
+    size: 1280px 720px landscape;
+    margin: 0;
+  }
+  body {
+    background: #071224 !important;
+  }
+  body::before,
+  body::after {
+    display: none !important;
+  }
+  .deck {
+    margin: 0;
+    width: auto;
+  }
+  .slide {
+    border-radius: 0;
+    border: none;
+    margin-bottom: 0;
+    box-shadow: none;
+    page-break-inside: avoid;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .slide::after {
+    border-radius: 0;
+  }
+  .slide::before {
+    display: none;
+  }
+  .card,
+  .flow-step,
+  .agent-cell,
+  .shot {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .card:hover,
+  .flow-step:hover,
+  .agent-cell:hover,
+  .shot:hover {
+    box-shadow: none;
+    transform: none;
+  }
+  .fill::after {
+    animation: none;
+  }
 }
 </style>
 </head>
@@ -56,11 +626,14 @@ ul{margin:6px 0 0 18px}
 <div class="deck">
 
   <!-- SLIDE 00: Title -->
-  <section class="slide">
+  <section class="slide slide-title">
+    <div class="hero-orb"></div>
+    <div class="hero-orb-2"></div>
+    <span class="slide-num">00 / 08</span>
     <div class="kicker">StoryForge | Banca Portuguesa</div>
     <h1>Plataforma Enterprise de Requisitos com IA</h1>
     <p>Arquitetura orientada a agentes, UI governada por Figma, exportacao pronta para Jira e Azure DevOps com audit trail e quality gates.</p>
-    <div style="margin-top:28px">
+    <div class="badge-row">
       <span class="badge">Figma = Source of Truth</span>
       <span class="badge">Vendor-Agnostic Agents</span>
       <span class="badge">Audit-Ready</span>
@@ -70,6 +643,7 @@ ul{margin:6px 0 0 18px}
 
   <!-- SLIDE 01: Scope -->
   <section class="slide">
+    <span class="slide-num">01 / 08</span>
     <h2>Contexto Imutavel e Objetivo</h2>
     <div class="grid grid-2">
       <div class="card"><h3>Restricoes Base</h3><ul><li>Sem alteracoes visuais fora do Figma</li><li>Sem renomear componentes/campos/fluxos</li><li>Foco em banca portuguesa e auditoria</li></ul></div>
@@ -80,6 +654,7 @@ ul{margin:6px 0 0 18px}
 
   <!-- SLIDE 02: Agent Architecture -->
   <section class="slide">
+    <span class="slide-num">02 / 08</span>
     <h2>Modelo de Agentes (Agnostico)</h2>
     <div class="grid grid-3">
       <div class="card"><h3>Ingest &amp; Discovery</h3><p>Context Ingestor + Questionnaire Agent normalizam contexto e fecham lacunas.</p></div>
@@ -90,8 +665,9 @@ ul{margin:6px 0 0 18px}
     <div class="footer"><span>02</span><span>Agent Architecture</span></div>
   </section>
 
-  <!-- SLIDE 03: Foundry Agent Integration (NEW) -->
+  <!-- SLIDE 03: Foundry Agent Integration -->
   <section class="slide">
+    <span class="slide-num">03 / 08</span>
     <h2>Integracao Azure AI Foundry</h2>
 
     <!-- Async 3-step flow -->
@@ -136,8 +712,9 @@ ul{margin:6px 0 0 18px}
     <div class="footer"><span>03</span><span>Agent Integration</span></div>
   </section>
 
-  <!-- SLIDE 04: Screens Core (was 03) -->
+  <!-- SLIDE 04: Screens Core -->
   <section class="slide">
+    <span class="slide-num">04 / 08</span>
     <h2>Screens Core (1/2)</h2>
     <div class="grid grid-4">
       <div class="shot"><img src="screenshots/dashboard.png" alt="Dashboard"><span>Dashboard</span></div>
@@ -149,8 +726,9 @@ ul{margin:6px 0 0 18px}
     <div class="footer"><span>04</span><span>UI Evidence</span></div>
   </section>
 
-  <!-- SLIDE 05: Screens Support (was 04) -->
+  <!-- SLIDE 05: Screens Support -->
   <section class="slide">
+    <span class="slide-num">05 / 08</span>
     <h2>Screens Support (2/2)</h2>
     <div class="grid grid-4">
       <div class="shot"><img src="screenshots/templates.png" alt="Templates"><span>Templates</span></div>
@@ -162,8 +740,9 @@ ul{margin:6px 0 0 18px}
     <div class="footer"><span>05</span><span>UI Evidence</span></div>
   </section>
 
-  <!-- SLIDE 06: E2E Flow (was 05) -->
+  <!-- SLIDE 06: E2E Flow -->
   <section class="slide">
+    <span class="slide-num">06 / 08</span>
     <h2>Fluxo End-to-End</h2>
     <div class="card">
       <p style="margin:0;color:#cfe0f3">Dashboard &#8594; Novo Projeto &#8594; Project Builder &#8594; Project View &#8594; Exportacao</p>
@@ -181,8 +760,9 @@ ul{margin:6px 0 0 18px}
     <div class="footer"><span>06</span><span>Operational Flow</span></div>
   </section>
 
-  <!-- SLIDE 07: Governance (was 06) -->
+  <!-- SLIDE 07: Governance -->
   <section class="slide">
+    <span class="slide-num">07 / 08</span>
     <h2>Governance, Compliance, Audit</h2>
     <div class="grid grid-2">
       <div class="card"><h3>Quality Gates</h3><ul><li>Completude e consistencia</li><li>Rastreabilidade requisito&#8594;teste</li><li>Bloqueio de export se falhar</li></ul></div>
@@ -192,8 +772,9 @@ ul{margin:6px 0 0 18px}
     <div class="footer"><span>07</span><span>Risk &amp; Compliance</span></div>
   </section>
 
-  <!-- SLIDE 08: Roadmap (was 07) -->
+  <!-- SLIDE 08: Roadmap -->
   <section class="slide">
+    <span class="slide-num">08 / 08</span>
     <h2>Roadmap de Entrega</h2>
     <div class="grid grid-3">
       <div class="card" style="border-color:rgba(94,234,212,.4)">
