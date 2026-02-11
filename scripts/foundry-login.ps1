@@ -2,24 +2,33 @@ param(
   [string]$SubscriptionId = "",
   [string]$ProjectEndpoint = "",
   [string]$ProjectId = "",
-  [string]$ApiVersion = "2025-05-01"
+  [string]$ApiVersion = "v1",
+  [string]$AzCliPath = ""
 )
 
 $ErrorActionPreference = "Stop"
 
 function Ensure-AzCli {
-  $az = Get-Command az -ErrorAction SilentlyContinue
-  if (-not $az) {
-    throw "Azure CLI (az) not found. Install from https://learn.microsoft.com/cli/azure/install-azure-cli"
+  if (-not $script:AzCliExe) {
+    $script:AzCliExe = if ($AzCliPath) { $AzCliPath } elseif ($env:FOUNDRY_AZ_CLI_PATH) { $env:FOUNDRY_AZ_CLI_PATH } else { "az" }
   }
+  $az = Get-Command $script:AzCliExe -ErrorAction SilentlyContinue
+  if (-not $az) {
+    throw "Azure CLI not found at '$script:AzCliExe'. Install from https://learn.microsoft.com/cli/azure/install-azure-cli or set FOUNDRY_AZ_CLI_PATH."
+  }
+}
+
+function Invoke-Az {
+  param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Args)
+  & $script:AzCliExe @Args
 }
 
 function Ensure-AzLogin {
   try {
-    $null = az account show 2>$null
+    $null = Invoke-Az account show 2>$null
   } catch {
     Write-Host "Azure login required. Opening az login..." -ForegroundColor Yellow
-    az login | Out-Null
+    Invoke-Az login | Out-Null
   }
 }
 
@@ -68,7 +77,7 @@ Ensure-AzCli
 Ensure-AzLogin
 
 if ($SubscriptionId) {
-  az account set --subscription $SubscriptionId
+  Invoke-Az account set --subscription $SubscriptionId
 }
 
 if (-not $ProjectEndpoint) {
@@ -87,7 +96,7 @@ if (-not $ProjectId) {
   }
 }
 
-$token = az account get-access-token --resource "https://ai.azure.com" --query accessToken -o tsv
+$token = Invoke-Az account get-access-token --resource "https://ai.azure.com" --query accessToken -o tsv
 if (-not $token) {
   throw "Failed to acquire Azure token for https://ai.azure.com"
 }
@@ -97,7 +106,7 @@ $raw = ""
 $discoveryWarning = $null
 try {
   $agentsUrl = "$ProjectEndpoint/agents?api-version=$ApiVersion"
-  $raw = az rest --method get --url $agentsUrl --headers "Authorization=Bearer $token" 2>$null
+  $raw = Invoke-Az rest --method get --url $agentsUrl --headers "Authorization=Bearer $token" 2>$null
   if ($LASTEXITCODE -eq 0 -and $raw) {
     $json = $raw | ConvertFrom-Json
     $agents = Get-JsonValueArray $json
@@ -126,18 +135,20 @@ foreach ($key in $map.Keys) {
 }
 
 $envPath = Join-Path (Get-Location) ".env.local"
-$agentUrlTemplate = "$ProjectEndpoint/agents/{agentId}/runs?api-version=$ApiVersion"
+# No longer setting VITE_FOUNDRY_AGENT_URL_TEMPLATE — the service defaults
+# to the documented POST {endpoint}/threads/runs?api-version=v1 endpoint.
 
 $lines = @()
 $lines += "VITE_AGENT_PROVIDER=foundry"
 $lines += ""
 $lines += "VITE_FOUNDRY_MODE=agent-id"
+$lines += "VITE_FOUNDRY_BASE_URL=$ProjectEndpoint"
 $lines += "VITE_FOUNDRY_ENDPOINT=$ProjectEndpoint"
+$lines += "VITE_FOUNDRY_API_VERSION=$ApiVersion"
 $lines += "VITE_FOUNDRY_PROJECT_ID=$ProjectId"
 $lines += "VITE_FOUNDRY_AUTH_MODE=bearer"
 $lines += "VITE_FOUNDRY_API_KEY_HEADER=api-key"
 $lines += "VITE_FOUNDRY_API_KEY=$token"
-$lines += "VITE_FOUNDRY_AGENT_URL_TEMPLATE=$agentUrlTemplate"
 $lines += ""
 $lines += "# Auto-resolved Agent IDs (verify and adjust if needed)"
 foreach ($k in $resolved.Keys) {

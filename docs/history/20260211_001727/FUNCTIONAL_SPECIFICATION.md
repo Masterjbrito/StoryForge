@@ -1,7 +1,7 @@
 # StoryForge - Especificacao Funcional
 
-**Versao:** 1.6.0
-**Data:** 2026-02-11
+**Versao:** 1.5.0
+**Data:** 2026-02-10
 **Classificacao:** Confidencial - Uso Interno
 **Autor:** Arquitectura de Sistema
 **Fonte de Verdade UI:** Figma (imutavel)
@@ -13,7 +13,6 @@
 
 | Versao | Data       | Tipo  | Descricao                                          |
 |--------|------------|-------|-----------------------------------------------------|
-| 1.6.0  | 2026-02-11 | MINOR | Correcao da integracao Foundry: endpoint threads/runs, polling assincrono, documentacao API actualizada |
 | 1.5.0  | 2026-02-10 | MINOR | Instrucoes completas copy/paste para os 9 agentes diretamente no documento principal |
 | 1.4.2  | 2026-02-10 | PATCH | `foundry-login.ps1` resiliente: quando auto-discovery falha, gera `.env.local` e pede IDs manuais sem bloquear |
 | 1.4.1  | 2026-02-10 | PATCH | Script operativo `foundry-login.ps1` para login Azure CLI, descoberta de agentes e geracao automatica de `.env.local` |
@@ -1427,7 +1426,7 @@ Objetivo: facilitar leitura funcional e alinhamento entre equipas tecnica, produ
 
 ---
 
-## 17. Estado Runtime dos Agentes (Actualizado 2026-02-11)
+## 17. Estado Runtime dos Agentes (Implementado em 2026-02-10)
 
 ### 17.1 Integracoes ativas no frontend
 
@@ -1448,60 +1447,15 @@ Objetivo: facilitar leitura funcional e alinhamento entre equipas tecnica, produ
 - `src/services/FoundryAgentService.ts` encapsula chamadas HTTP ao endpoint Foundry.
 - `src/types/agents.ts` define contratos vendor-agnostic para os 9 agentes.
 
-### 17.4 Protocolo de Comunicacao com Azure AI Agent Service
-
-O servico utiliza a API REST documentada do Azure AI Foundry Agent Service (aka Assistants API).
-
-**Endpoint principal:** `POST {endpoint}/threads/runs?api-version=v1` (Create Thread and Run)
-
-**Fluxo completo por invocacao de agente:**
-
-```
-1. POST {endpoint}/threads/runs?api-version=v1
-   Body: {
-     "assistant_id": "asst_xxx",
-     "thread": {
-       "messages": [{ "role": "user", "content": "<payload JSON>" }]
-     }
-   }
-   Response: { "id": "<runId>", "thread_id": "<threadId>", "status": "queued" }
-
-2. POLL: GET {endpoint}/threads/{threadId}/runs/{runId}?api-version=v1
-   Repete a cada 1s ate status = "completed" | "failed" | "cancelled" | "expired"
-
-3. GET {endpoint}/threads/{threadId}/messages?api-version=v1
-   Extrai a ultima mensagem com role = "assistant"
-   Conteudo: array de blocos com type = "text" e text.value = resposta do agente
-```
-
-**Timeout:** 60 segundos (configuravel via `timeoutMs`).
-
-**Autenticacao:** Bearer token Azure AD (scope: `https://ai.azure.com/.default`).
-
-**Referencia oficial:** https://learn.microsoft.com/en-us/rest/api/aifoundry/aiagents/
-
-### 17.5 Historico de Correcoes da Integracao
-
-| Data       | Problema                                    | Resolucao                                                |
-|------------|---------------------------------------------|----------------------------------------------------------|
-| 2026-02-11 | Endpoint `/agents/{id}/runs` retorna 404    | Corrigido para `POST /threads/runs` com `assistant_id` no body |
-| 2026-02-11 | Resposta assincrona nao tratada             | Adicionado polling de runs + fetch de thread messages      |
-| 2026-02-11 | Token expirado nao detectado                | Script de teste com validacao JWT + renovacao automatica   |
-| 2026-02-11 | Erros de debug mascarados (so 1o erro)      | Script actualizado para mostrar todos os erros             |
-
 
 ## 18. Configuracao Foundry por IDs de Agente
 
-### 18.1 Configuracao Manual
-
 Para usar IDs reais no runtime:
 
-1. Copiar `.env.example` para `.env.local`.
+1. Copiar `.env.example` para `.env`.
 2. Definir `VITE_AGENT_PROVIDER=foundry`.
-3. Preencher `VITE_FOUNDRY_ENDPOINT` e/ou `VITE_FOUNDRY_BASE_URL` com o endpoint do projecto:
-   - Formato: `https://<resource>.services.ai.azure.com/api/projects/<project>`
-4. Preencher `VITE_FOUNDRY_API_KEY` com token Bearer (Azure AD).
-5. Definir `VITE_FOUNDRY_MODE=agent-id` e preencher os 9 IDs de agente:
+3. Se usar endpoint unico, manter `VITE_FOUNDRY_MODE=single-endpoint` e preencher `VITE_FOUNDRY_ENDPOINT`.
+4. Se usar IDs por agente, definir `VITE_FOUNDRY_MODE=agent-id`, preencher `VITE_FOUNDRY_AGENT_URL_TEMPLATE` e os 9 IDs:
    - `VITE_FOUNDRY_AGENT_CONTEXT_INGESTOR_ID`
    - `VITE_FOUNDRY_AGENT_QUESTIONNAIRE_DISCOVERY_ID`
    - `VITE_FOUNDRY_AGENT_REQUIREMENTS_GENERATOR_ID`
@@ -1512,67 +1466,27 @@ Para usar IDs reais no runtime:
    - `VITE_FOUNDRY_AGENT_EXPORT_ID`
    - `VITE_FOUNDRY_AGENT_AUDIT_LOGGING_ID`
 
-**Nota:** NAO e necessario definir `VITE_FOUNDRY_AGENT_URL_TEMPLATE`. O servico usa automaticamente o endpoint documentado `POST {endpoint}/threads/runs?api-version=v1` com `assistant_id` no body.
+Nota de resiliencia:
+- Se Foundry falhar em runtime, o sistema muda automaticamente para Mock e mostra popup de erro.
 
-**Resiliencia:** Se Foundry falhar em runtime, o sistema muda automaticamente para Mock e mostra popup de erro.
+### 18.1 Automacao via Azure CLI (script oficial do projeto)
 
-### 18.2 Variaveis de Ambiente Completas
+Script disponibilizado:
+- `scripts/foundry-login.ps1`
 
-| Variavel | Obrigatoria | Descricao |
-|----------|-------------|-----------|
-| `VITE_AGENT_PROVIDER` | Sim | `mock` ou `foundry` |
-| `VITE_FOUNDRY_ENDPOINT` | Sim* | Endpoint base do projecto Foundry |
-| `VITE_FOUNDRY_BASE_URL` | Nao | Alias de VITE_FOUNDRY_ENDPOINT (fallback) |
-| `VITE_FOUNDRY_API_KEY` | Sim* | Token Bearer (Azure AD) ou API key |
-| `VITE_FOUNDRY_PROJECT_ID` | Nao | Extraido automaticamente do endpoint |
-| `VITE_FOUNDRY_API_VERSION` | Nao | Default: `v1` |
-| `VITE_FOUNDRY_MODE` | Nao | `single-endpoint` (default) ou `agent-id` |
-| `VITE_FOUNDRY_AUTH_MODE` | Nao | `bearer` (default) ou `api-key` |
-| `VITE_FOUNDRY_API_KEY_HEADER` | Nao | Header para modo api-key. Default: `api-key` |
-| `VITE_FOUNDRY_AGENT_*_ID` | Sim** | IDs dos 9 agentes (modo agent-id) |
-| `FOUNDRY_BASE_URL` | Nao | Usado por scripts PowerShell |
-| `FOUNDRY_API_VERSION` | Nao | Usado por scripts PowerShell |
-| `FOUNDRY_AZ_RESOURCE` | Nao | Recurso Azure CLI. Default: `https://ai.azure.com` |
-| `FOUNDRY_AZ_CLI_PATH` | Nao | Caminho para `az.cmd` se nao estiver no PATH |
-
-\* Obrigatorio quando `VITE_AGENT_PROVIDER=foundry`
-\** Obrigatorio quando `VITE_FOUNDRY_MODE=agent-id`
-
-### 18.3 Automacao via Azure CLI
-
-**Script:** `scripts/foundry-login.ps1`
-**Comando:** `npm run foundry:login`
+Comando:
+- `npm run foundry:login`
 
 O script executa:
 1. Verifica `az` instalado e sessao autenticada (`az login` quando necessario).
 2. Obtem token Entra para `https://ai.azure.com`.
-3. Lista agentes via `GET {endpoint}/assistants?api-version=v1`.
-4. Resolve automaticamente IDs dos 9 agentes por nome (keyword matching).
+3. Lista agentes no endpoint de projeto.
+4. Resolve automaticamente IDs dos 9 agentes por nome (quando possivel).
 5. Gera `.env.local` com configuracao Foundry em modo `agent-id`.
 6. Exporta dump tecnico em `docs/_export/foundry-agents-latest.json`.
 
-**Nota:** O token escrito em `VITE_FOUNDRY_API_KEY` e temporario (~1h). Deve ser renovado periodicamente com nova execucao do script.
-
-### 18.4 Validacao de Conectividade
-
-**Script:** `scripts/test-foundry-agents.ps1`
-
-O script executa:
-1. Le `.env.local` para configuracao.
-2. Valida token JWT (renovacao automatica via Azure CLI se expirado).
-3. Pre-check: `GET {endpoint}/assistants?api-version=v1` para listar agentes disponiveis.
-4. Testa cada agente via `POST {endpoint}/threads/runs?api-version=v1` com `assistant_id` no body.
-5. Mostra resultado detalhado por agente (OK/ERR com codigo HTTP e mensagem).
-
-**Interpretacao de resultados:**
-
-| Resultado | Significado |
-|-----------|-------------|
-| `OK(200)` | Agente funcional, run criado com sucesso |
-| `ERR(401)` | Token expirado ou invalido |
-| `ERR(404)` | Endpoint ou agent ID nao encontrado no projecto |
-| `ERR(400)` | Formato de body invalido |
-| `SKIP` | ID do agente nao configurado no `.env.local` |
+Nota:
+- O token escrito em `VITE_FOUNDRY_API_KEY` e temporario. Deve ser renovado periodicamente com nova execucao do script.
 
 ## 19. Prompt Master por Agente (Copy/Paste Foundry)
 

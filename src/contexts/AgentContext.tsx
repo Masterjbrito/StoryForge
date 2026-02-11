@@ -129,8 +129,9 @@ class FallbackAgentService implements IAgentService {
 export function AgentProvider({ children }: { children: ReactNode }) {
   const env = (import.meta as any).env ?? {};
   const configuredProvider = String(env.VITE_AGENT_PROVIDER ?? 'mock').toLowerCase();
-  const foundryEndpoint = String(env.VITE_FOUNDRY_ENDPOINT ?? '');
+  const foundryEndpoint = String(env.VITE_FOUNDRY_ENDPOINT ?? env.VITE_FOUNDRY_BASE_URL ?? '');
   const foundryApiKey = String(env.VITE_FOUNDRY_API_KEY ?? '');
+  const foundryApiVersion = String(env.VITE_FOUNDRY_API_VERSION ?? 'v1');
   const foundryProjectId = env.VITE_FOUNDRY_PROJECT_ID ? String(env.VITE_FOUNDRY_PROJECT_ID) : undefined;
   const foundryMode = String(env.VITE_FOUNDRY_MODE ?? 'single-endpoint').toLowerCase() === 'agent-id'
     ? 'agent-id'
@@ -139,6 +140,8 @@ export function AgentProvider({ children }: { children: ReactNode }) {
     ? 'api-key'
     : 'bearer';
   const foundryApiKeyHeader = String(env.VITE_FOUNDRY_API_KEY_HEADER ?? 'api-key');
+  // Only use an explicit URL template if the user set one; otherwise the service
+  // defaults to the documented /threads/runs endpoint internally.
   const foundryAgentUrlTemplate = env.VITE_FOUNDRY_AGENT_URL_TEMPLATE
     ? String(env.VITE_FOUNDRY_AGENT_URL_TEMPLATE)
     : undefined;
@@ -175,6 +178,7 @@ export function AgentProvider({ children }: { children: ReactNode }) {
         endpoint: foundryEndpoint,
         apiKey: foundryApiKey,
         projectId: foundryProjectId,
+        apiVersion: foundryApiVersion,
         mode: foundryMode,
         authMode: foundryAuthMode,
         apiKeyHeader: foundryApiKeyHeader,
@@ -201,6 +205,7 @@ export function AgentProvider({ children }: { children: ReactNode }) {
   }, [
     configuredProvider,
     foundryApiKey,
+    foundryApiVersion,
     foundryEndpoint,
     foundryProjectId,
     foundryMode,

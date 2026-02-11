@@ -15,3 +15,5 @@
 | 20260210_234516 | docs/history/20260210_234516 | 5 docs + screenshots |
 | 20260210_235919 | docs/history/20260210_235919 | 5 docs + screenshots |
 | 20260211_000030 | docs/history/20260211_000030 | 5 docs + screenshots |
+| 20260211_001727 | docs/history/20260211_001727 | 5 docs + screenshots |
+| 20260211_122457 | docs/history/20260211_122457 | 5 docs + screenshots |
