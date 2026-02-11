@@ -92,13 +92,20 @@ if (-not $token) {
   throw "Failed to acquire Azure token for https://ai.azure.com"
 }
 
-$agentsUrl = "$ProjectEndpoint/agents?api-version=$ApiVersion"
-$raw = az rest --method get --url $agentsUrl --headers "Authorization=Bearer $token"
-$json = $raw | ConvertFrom-Json
-$agents = Get-JsonValueArray $json
-
-if ($agents.Count -eq 0) {
-  throw "No agents returned from Foundry endpoint. Check ProjectEndpoint / RBAC / ApiVersion."
+$agents = @()
+$raw = ""
+$discoveryWarning = $null
+try {
+  $agentsUrl = "$ProjectEndpoint/agents?api-version=$ApiVersion"
+  $raw = az rest --method get --url $agentsUrl --headers "Authorization=Bearer $token" 2>$null
+  if ($LASTEXITCODE -eq 0 -and $raw) {
+    $json = $raw | ConvertFrom-Json
+    $agents = Get-JsonValueArray $json
+  } else {
+    $discoveryWarning = "Agent discovery failed (az rest)."
+  }
+} catch {
+  $discoveryWarning = "Agent discovery failed: $($_.Exception.Message)"
 }
 
 $map = [ordered]@{
@@ -115,7 +122,7 @@ $map = [ordered]@{
 
 $resolved = [ordered]@{}
 foreach ($key in $map.Keys) {
-  $resolved[$key] = Find-AgentIdByKeywords $agents $map[$key]
+  $resolved[$key] = if ($agents.Count -gt 0) { Find-AgentIdByKeywords $agents $map[$key] } else { "" }
 }
 
 $envPath = Join-Path (Get-Location) ".env.local"
@@ -144,18 +151,29 @@ if (-not (Test-Path $exportDir)) {
   New-Item -Path $exportDir -ItemType Directory | Out-Null
 }
 $agentsDumpPath = Join-Path $exportDir "foundry-agents-latest.json"
-[System.IO.File]::WriteAllText($agentsDumpPath, ($raw | Out-String), (New-Object System.Text.UTF8Encoding($false)))
+if ($raw) {
+  [System.IO.File]::WriteAllText($agentsDumpPath, ($raw | Out-String), (New-Object System.Text.UTF8Encoding($false)))
+}
 
 Write-Host ""
 Write-Host "Foundry setup completed." -ForegroundColor Green
 Write-Host ".env.local updated: $envPath"
-Write-Host "Agents dump: $agentsDumpPath"
+if ($raw) {
+  Write-Host "Agents dump: $agentsDumpPath"
+}
 Write-Host ""
-Write-Host "Detected agents:"
-foreach ($agent in $agents) {
-  $id = Get-AgentId $agent
-  $name = Get-AgentName $agent
-  Write-Host ("- {0} => {1}" -f $name, $id)
+if ($agents.Count -gt 0) {
+  Write-Host "Detected agents:"
+  foreach ($agent in $agents) {
+    $id = Get-AgentId $agent
+    $name = Get-AgentName $agent
+    Write-Host ("- {0} => {1}" -f $name, $id)
+  }
+} else {
+  Write-Host "Detected agents: none (auto-discovery unavailable)" -ForegroundColor Yellow
+  if ($discoveryWarning) {
+    Write-Host $discoveryWarning -ForegroundColor Yellow
+  }
 }
 Write-Host ""
 Write-Host "Resolved mapping:"

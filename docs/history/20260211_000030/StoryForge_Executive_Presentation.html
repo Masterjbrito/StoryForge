@@ -1,0 +1,140 @@
+﻿<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>StoryForge - Executive Presentation</title>
+<style>
+:root{--bg:#081528;--card:#0f223a;--ink:#e5eef8;--muted:#9fb3ca;--line:#2b4261;--acc:#5eead4;--acc2:#93c5fd;}
+*{box-sizing:border-box}
+body{margin:0;background:#020817;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink)}
+.deck{width:1280px;margin:16px auto}
+.slide{position:relative;width:1280px;height:720px;padding:56px 70px;background:radial-gradient(1200px 500px at 90% -10%,#1e3a5f 0,#0b1c31 45%,#071224 100%);border:1px solid #213853;border-radius:16px;overflow:hidden;page-break-after:always;break-after:page}
+.slide:last-child{page-break-after:auto;break-after:auto}
+.kicker{font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--acc)}
+h1{margin:12px 0 0;font-size:52px;line-height:1.06}
+h2{margin:10px 0 18px;font-size:40px;line-height:1.1}
+p{font-size:22px;line-height:1.45;color:var(--muted);max-width:1020px}
+.grid{display:grid;gap:16px}
+.grid-2{grid-template-columns:1fr 1fr}
+.grid-3{grid-template-columns:repeat(3,1fr)}
+.grid-4{grid-template-columns:repeat(4,1fr)}
+.card{background:rgba(11,28,49,.68);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+.card h3{margin:0 0 8px;font-size:21px;color:var(--ink)}
+.card p,.card li{font-size:17px;color:var(--muted);line-height:1.4}
+ul{margin:6px 0 0 18px}
+.big{font-size:30px;color:var(--acc2);font-weight:700}
+.badge{display:inline-block;padding:5px 10px;border:1px solid var(--line);border-radius:999px;font-size:13px;color:var(--acc);margin-right:8px}
+.footer{position:absolute;bottom:24px;left:70px;right:70px;display:flex;justify-content:space-between;font-size:14px;color:#7f95ad}
+.bar{height:8px;background:#11253e;border-radius:999px;overflow:hidden}
+.fill{height:100%;background:linear-gradient(90deg,#5eead4,#93c5fd)}
+.shot{border:1px solid #395577;border-radius:10px;overflow:hidden;background:#0b1a2b}
+.shot img{display:block;width:100%;height:120px;object-fit:cover}
+.shot span{display:block;padding:6px 8px;font-size:12px;color:#c4d5e8;text-align:center}
+@media print{
+ @page{size:landscape;margin:0}
+ body{background:#000}
+ .deck{margin:0;width:auto}
+ .slide{border-radius:0;border:none}
+}
+</style>
+</head>
+<body>
+<div class="deck">
+  <section class="slide">
+    <div class="kicker">StoryForge | Banca Portuguesa</div>
+    <h1>Plataforma Enterprise de Requisitos com IA</h1>
+    <p>Arquitetura orientada a agentes, UI governada por Figma, exportacao pronta para Jira e Azure DevOps com audit trail e quality gates.</p>
+    <div style="margin-top:28px">
+      <span class="badge">Figma = Source of Truth</span>
+      <span class="badge">Vendor-Agnostic Agents</span>
+      <span class="badge">Audit-Ready</span>
+    </div>
+    <div class="footer"><span>Versao 1.2.0</span><span>10 Fev 2026</span></div>
+  </section>
+
+  <section class="slide">
+    <h2>Contexto Imutavel e Objetivo</h2>
+    <div class="grid grid-2">
+      <div class="card"><h3>Restricoes Base</h3><ul><li>Sem alteracoes visuais fora do Figma</li><li>Sem renomear componentes/campos/fluxos</li><li>Foco em banca portuguesa e auditoria</li></ul></div>
+      <div class="card"><h3>Resultado de Negocio</h3><ul><li>Gerar Epics, Features, US, Tasks e Test Cases</li><li>Aplicar PSD2, SCA, GDPR e controlo de qualidade</li><li>Publicar artefactos em Jira/Azure com idempotencia</li></ul></div>
+    </div>
+    <div class="footer"><span>01</span><span>Scope</span></div>
+  </section>
+
+  <section class="slide">
+    <h2>Modelo de Agentes (Agnostico)</h2>
+    <div class="grid grid-3">
+      <div class="card"><h3>Ingest & Discovery</h3><p>Context Ingestor + Questionnaire Agent normalizam contexto e fecham lacunas.</p></div>
+      <div class="card"><h3>Generation Core</h3><p>Requirements + Acceptance + Test Design geram estrutura funcional completa.</p></div>
+      <div class="card"><h3>Control Plane</h3><p>Quality Gate, Versioning, Export e Audit garantem governance e compliance.</p></div>
+    </div>
+    <p style="margin-top:22px">Provider atual pode ser Foundry; troca futura para OpenAI/Claude/LangGraph sem alterar arquitetura funcional.</p>
+    <div class="footer"><span>02</span><span>Agent Architecture</span></div>
+  </section>
+
+  <section class="slide">
+    <h2>Screens Core (1/2)</h2>
+    <div class="grid grid-4">
+      <div class="shot"><img src="screenshots/dashboard.png" alt="Dashboard"><span>Dashboard</span></div>
+      <div class="shot"><img src="screenshots/new-project.png" alt="Novo Projeto"><span>Novo Projeto</span></div>
+      <div class="shot"><img src="screenshots/project-builder.png" alt="Project Builder"><span>Project Builder</span></div>
+      <div class="shot"><img src="screenshots/project-view.png" alt="Project View"><span>Project View</span></div>
+    </div>
+    <p style="margin-top:18px">Fluxo principal: descoberta, geracao de artefactos e publicacao.</p>
+    <div class="footer"><span>03</span><span>UI Evidence</span></div>
+  </section>
+
+  <section class="slide">
+    <h2>Screens Support (2/2)</h2>
+    <div class="grid grid-4">
+      <div class="shot"><img src="screenshots/templates.png" alt="Templates"><span>Templates</span></div>
+      <div class="shot"><img src="screenshots/library.png" alt="Biblioteca"><span>Biblioteca</span></div>
+      <div class="shot"><img src="screenshots/integrations.png" alt="Integracoes"><span>Integracoes</span></div>
+      <div class="shot"><img src="screenshots/audit.png" alt="Auditoria"><span>Auditoria & Logs</span></div>
+    </div>
+    <p style="margin-top:18px">Suporte a reutilizacao, exportacao e trilha auditavel.</p>
+    <div class="footer"><span>04</span><span>UI Evidence</span></div>
+  </section>
+
+  <section class="slide">
+    <h2>Fluxo End-to-End</h2>
+    <div class="card">
+      <p style="margin:0;color:#cfe0f3">Dashboard -> Novo Projeto -> Project Builder -> Project View -> Exportacao</p>
+      <div style="height:14px"></div>
+      <div class="bar"><div class="fill" style="width:100%"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:14px;color:#9fb3ca">
+        <span>Contexto</span><span>Descoberta</span><span>Geracao</span><span>Validacao</span><span>Publicacao</span>
+      </div>
+    </div>
+    <div class="grid grid-3" style="margin-top:18px">
+      <div class="card"><h3>Input</h3><p>Formulario, metadata, uploads</p></div>
+      <div class="card"><h3>Processing</h3><p>Artefactos + criterios + testes</p></div>
+      <div class="card"><h3>Output</h3><p>Estrutura pronta para Jira/Azure</p></div>
+    </div>
+    <div class="footer"><span>05</span><span>Operational Flow</span></div>
+  </section>
+
+  <section class="slide">
+    <h2>Governance, Compliance, Audit</h2>
+    <div class="grid grid-2">
+      <div class="card"><h3>Quality Gates</h3><ul><li>Completude e consistencia</li><li>Rastreabilidade requisito->teste</li><li>Bloqueio de export se falhar</li></ul></div>
+      <div class="card"><h3>Audit Trail</h3><ul><li>Logs append-only</li><li>Retencao 10 anos</li><li>Encriptacao e trilha por utilizador</li></ul></div>
+    </div>
+    <div class="card" style="margin-top:18px"><h3>Regulacao incorporada</h3><p>PSD2, SCA, GDPR, Banco de Portugal, SIBS, AML/KYC, PCI-DSS, MiFID II.</p></div>
+    <div class="footer"><span>06</span><span>Risk & Compliance</span></div>
+  </section>
+
+  <section class="slide">
+    <h2>Roadmap de Entrega</h2>
+    <div class="grid grid-3">
+      <div class="card"><h3>Fase 1</h3><p>Core funcional + persistencia local + mocks inteligentes.</p></div>
+      <div class="card"><h3>Fase 2</h3><p>Backend, auth corporativa e quality gates server-side.</p></div>
+      <div class="card"><h3>Fase 3</h3><p>Ligacao Foundry, export enterprise e observabilidade completa.</p></div>
+    </div>
+    <p style="margin-top:20px">Meta: manter 100% alinhamento com Figma e evoluir a arquitetura sem vendor lock-in.</p>
+    <div class="footer"><span>07</span><span>Delivery Plan</span></div>
+  </section>
+</div>
+</body>
+</html>
