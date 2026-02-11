@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+﻿import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { IAgentService } from '@/types/agents';
 import type {
   AgentResponse,
@@ -13,10 +13,41 @@ import type {
 import type { NewProjectFormData, Epic, ConversationMessage } from '@/types/domain';
 import { MockAgentService } from '@/services/MockAgentService';
 import { FoundryAgentService } from '@/services/FoundryAgentService';
+import { loadFromStorage, saveToStorage } from '@/lib/storage';
+
+export type AgentProviderId = 'foundry' | 'mock' | 'openai' | 'claude';
+
+export interface FoundryAgentIds {
+  'context-ingestor'?: string;
+  'questionnaire-discovery'?: string;
+  'requirements-generator'?: string;
+  'acceptance-criteria'?: string;
+  'test-design'?: string;
+  'quality-gate'?: string;
+  'versioning-diff'?: string;
+  export?: string;
+  'audit-logging'?: string;
+}
+
+export interface FoundryRuntimeSettings {
+  endpoint: string;
+  apiKey: string;
+  apiVersion: string;
+  projectId?: string;
+  mode: 'single-endpoint' | 'agent-id';
+  authMode: 'bearer' | 'api-key';
+  apiKeyHeader: string;
+  agentUrlTemplate?: string;
+  agentIds: FoundryAgentIds;
+}
 
 interface AgentContextValue {
   agentService: IAgentService;
   provider: string;
+  providerId: AgentProviderId;
+  setProviderId: (providerId: AgentProviderId) => void;
+  foundrySettings: FoundryRuntimeSettings;
+  updateFoundrySettings: (patch: Partial<FoundryRuntimeSettings>) => void;
   lastError: string | null;
   lastErrorAt: Date | null;
   debugEvents: Array<{
@@ -146,52 +177,94 @@ class FallbackAgentService implements IAgentService {
   }
 }
 
+function mapProviderLabel(providerId: AgentProviderId): string {
+  if (providerId === 'foundry') return 'Microsoft Foundry';
+  if (providerId === 'openai') return 'OpenAI (Mock Bridge)';
+  if (providerId === 'claude') return 'Claude (Mock Bridge)';
+  return 'Mock (Development)';
+}
+
 export function AgentProvider({ children }: { children: ReactNode }) {
   const env = (import.meta as any).env ?? {};
-  const configuredProvider = String(env.VITE_AGENT_PROVIDER ?? 'mock').toLowerCase();
-  const foundryEndpoint = String(env.VITE_FOUNDRY_ENDPOINT ?? env.VITE_FOUNDRY_BASE_URL ?? '');
-  const foundryApiKey = String(env.VITE_FOUNDRY_API_KEY ?? '');
-  const foundryApiVersion = String(env.VITE_FOUNDRY_API_VERSION ?? 'v1');
-  const foundryProjectId = env.VITE_FOUNDRY_PROJECT_ID ? String(env.VITE_FOUNDRY_PROJECT_ID) : undefined;
-  const foundryMode = String(env.VITE_FOUNDRY_MODE ?? 'single-endpoint').toLowerCase() === 'agent-id'
-    ? 'agent-id'
-    : 'single-endpoint';
-  const foundryAuthMode = String(env.VITE_FOUNDRY_AUTH_MODE ?? 'bearer').toLowerCase() === 'api-key'
-    ? 'api-key'
-    : 'bearer';
-  const foundryApiKeyHeader = String(env.VITE_FOUNDRY_API_KEY_HEADER ?? 'api-key');
-  // Only use an explicit URL template if the user set one; otherwise the service
-  // defaults to the documented /threads/runs endpoint internally.
-  const foundryAgentUrlTemplate = env.VITE_FOUNDRY_AGENT_URL_TEMPLATE
-    ? String(env.VITE_FOUNDRY_AGENT_URL_TEMPLATE)
-    : undefined;
-  const foundryAgentIds = {
-    'context-ingestor': env.VITE_FOUNDRY_AGENT_CONTEXT_INGESTOR_ID ? String(env.VITE_FOUNDRY_AGENT_CONTEXT_INGESTOR_ID) : undefined,
-    'questionnaire-discovery': env.VITE_FOUNDRY_AGENT_QUESTIONNAIRE_DISCOVERY_ID ? String(env.VITE_FOUNDRY_AGENT_QUESTIONNAIRE_DISCOVERY_ID) : undefined,
-    'requirements-generator': env.VITE_FOUNDRY_AGENT_REQUIREMENTS_GENERATOR_ID ? String(env.VITE_FOUNDRY_AGENT_REQUIREMENTS_GENERATOR_ID) : undefined,
-    'acceptance-criteria': env.VITE_FOUNDRY_AGENT_ACCEPTANCE_CRITERIA_ID ? String(env.VITE_FOUNDRY_AGENT_ACCEPTANCE_CRITERIA_ID) : undefined,
-    'test-design': env.VITE_FOUNDRY_AGENT_TEST_DESIGN_ID ? String(env.VITE_FOUNDRY_AGENT_TEST_DESIGN_ID) : undefined,
-    'quality-gate': env.VITE_FOUNDRY_AGENT_QUALITY_GATE_ID ? String(env.VITE_FOUNDRY_AGENT_QUALITY_GATE_ID) : undefined,
-    'versioning-diff': env.VITE_FOUNDRY_AGENT_VERSIONING_DIFF_ID ? String(env.VITE_FOUNDRY_AGENT_VERSIONING_DIFF_ID) : undefined,
-    export: env.VITE_FOUNDRY_AGENT_EXPORT_ID ? String(env.VITE_FOUNDRY_AGENT_EXPORT_ID) : undefined,
-    'audit-logging': env.VITE_FOUNDRY_AGENT_AUDIT_LOGGING_ID ? String(env.VITE_FOUNDRY_AGENT_AUDIT_LOGGING_ID) : undefined,
-  } as const;
-  const initInvalid = configuredProvider === 'foundry' && (!foundryEndpoint || !foundryApiKey);
-  const [provider, setProvider] = useState(
-    configuredProvider === 'foundry' ? 'Microsoft Foundry' : 'Mock (Development)'
+  const envProvider = String(env.VITE_AGENT_PROVIDER ?? 'mock').toLowerCase() === 'foundry' ? 'foundry' : 'mock';
+
+  const defaultFoundrySettings: FoundryRuntimeSettings = {
+    endpoint: String(env.VITE_FOUNDRY_ENDPOINT ?? env.VITE_FOUNDRY_BASE_URL ?? ''),
+    apiKey: String(env.VITE_FOUNDRY_API_KEY ?? ''),
+    apiVersion: String(env.VITE_FOUNDRY_API_VERSION ?? 'v1'),
+    projectId: env.VITE_FOUNDRY_PROJECT_ID ? String(env.VITE_FOUNDRY_PROJECT_ID) : undefined,
+    mode: String(env.VITE_FOUNDRY_MODE ?? 'single-endpoint').toLowerCase() === 'agent-id' ? 'agent-id' : 'single-endpoint',
+    authMode: String(env.VITE_FOUNDRY_AUTH_MODE ?? 'bearer').toLowerCase() === 'api-key' ? 'api-key' : 'bearer',
+    apiKeyHeader: String(env.VITE_FOUNDRY_API_KEY_HEADER ?? 'api-key'),
+    agentUrlTemplate: env.VITE_FOUNDRY_AGENT_URL_TEMPLATE ? String(env.VITE_FOUNDRY_AGENT_URL_TEMPLATE) : undefined,
+    agentIds: {
+      'context-ingestor': env.VITE_FOUNDRY_AGENT_CONTEXT_INGESTOR_ID ? String(env.VITE_FOUNDRY_AGENT_CONTEXT_INGESTOR_ID) : undefined,
+      'questionnaire-discovery': env.VITE_FOUNDRY_AGENT_QUESTIONNAIRE_DISCOVERY_ID ? String(env.VITE_FOUNDRY_AGENT_QUESTIONNAIRE_DISCOVERY_ID) : undefined,
+      'requirements-generator': env.VITE_FOUNDRY_AGENT_REQUIREMENTS_GENERATOR_ID ? String(env.VITE_FOUNDRY_AGENT_REQUIREMENTS_GENERATOR_ID) : undefined,
+      'acceptance-criteria': env.VITE_FOUNDRY_AGENT_ACCEPTANCE_CRITERIA_ID ? String(env.VITE_FOUNDRY_AGENT_ACCEPTANCE_CRITERIA_ID) : undefined,
+      'test-design': env.VITE_FOUNDRY_AGENT_TEST_DESIGN_ID ? String(env.VITE_FOUNDRY_AGENT_TEST_DESIGN_ID) : undefined,
+      'quality-gate': env.VITE_FOUNDRY_AGENT_QUALITY_GATE_ID ? String(env.VITE_FOUNDRY_AGENT_QUALITY_GATE_ID) : undefined,
+      'versioning-diff': env.VITE_FOUNDRY_AGENT_VERSIONING_DIFF_ID ? String(env.VITE_FOUNDRY_AGENT_VERSIONING_DIFF_ID) : undefined,
+      export: env.VITE_FOUNDRY_AGENT_EXPORT_ID ? String(env.VITE_FOUNDRY_AGENT_EXPORT_ID) : undefined,
+      'audit-logging': env.VITE_FOUNDRY_AGENT_AUDIT_LOGGING_ID ? String(env.VITE_FOUNDRY_AGENT_AUDIT_LOGGING_ID) : undefined,
+    },
+  };
+
+  const [providerId, setProviderId] = useState<AgentProviderId>(
+    () => loadFromStorage<AgentProviderId>('agent_provider_id', envProvider as AgentProviderId)
   );
+
+  const [foundrySettings, setFoundrySettings] = useState<FoundryRuntimeSettings>(() => {
+    const stored = loadFromStorage<Partial<FoundryRuntimeSettings>>('agent_foundry_settings', {});
+    return {
+      ...defaultFoundrySettings,
+      ...stored,
+      agentIds: {
+        ...defaultFoundrySettings.agentIds,
+        ...(stored.agentIds ?? {}),
+      },
+    };
+  });
+
+  const [provider, setProvider] = useState(mapProviderLabel(providerId));
   const [lastError, setLastError] = useState<string | null>(null);
   const [lastErrorAt, setLastErrorAt] = useState<Date | null>(null);
   const [debugEvents, setDebugEvents] = useState<AgentContextValue['debugEvents']>([]);
   const popupShownRef = useRef(false);
 
+  const updateFoundrySettings = (patch: Partial<FoundryRuntimeSettings>) => {
+    setFoundrySettings((prev) => ({
+      ...prev,
+      ...patch,
+      agentIds: {
+        ...prev.agentIds,
+        ...(patch.agentIds ?? {}),
+      },
+    }));
+  };
+
+  useEffect(() => {
+    saveToStorage('agent_provider_id', providerId);
+    setProvider(mapProviderLabel(providerId));
+  }, [providerId]);
+
+  useEffect(() => {
+    saveToStorage('agent_foundry_settings', foundrySettings);
+  }, [foundrySettings]);
+
+  const initInvalid = providerId === 'foundry' && (!foundrySettings.endpoint || !foundrySettings.apiKey);
+
   const value = useMemo<AgentContextValue>(() => {
     const mock = new MockAgentService();
 
-    if (configuredProvider !== 'foundry') {
+    if (providerId !== 'foundry') {
       return {
         agentService: mock,
         provider,
+        providerId,
+        setProviderId,
+        foundrySettings,
+        updateFoundrySettings,
         lastError: null,
         lastErrorAt: null,
         debugEvents,
@@ -203,6 +276,10 @@ export function AgentProvider({ children }: { children: ReactNode }) {
       return {
         agentService: mock,
         provider: 'Mock (Fallback)',
+        providerId,
+        setProviderId,
+        foundrySettings,
+        updateFoundrySettings,
         lastError: 'Configuracao Foundry invalida (endpoint/api key em falta).',
         lastErrorAt,
         debugEvents,
@@ -212,15 +289,15 @@ export function AgentProvider({ children }: { children: ReactNode }) {
 
     try {
       const foundry = new FoundryAgentService({
-        endpoint: foundryEndpoint,
-        apiKey: foundryApiKey,
-        projectId: foundryProjectId,
-        apiVersion: foundryApiVersion,
-        mode: foundryMode,
-        authMode: foundryAuthMode,
-        apiKeyHeader: foundryApiKeyHeader,
-        agentUrlTemplate: foundryAgentUrlTemplate,
-        agentIds: foundryAgentIds,
+        endpoint: foundrySettings.endpoint,
+        apiKey: foundrySettings.apiKey,
+        projectId: foundrySettings.projectId,
+        apiVersion: foundrySettings.apiVersion,
+        mode: foundrySettings.mode,
+        authMode: foundrySettings.authMode,
+        apiKeyHeader: foundrySettings.apiKeyHeader,
+        agentUrlTemplate: foundrySettings.agentUrlTemplate,
+        agentIds: foundrySettings.agentIds,
         onDebug: (event) => {
           setDebugEvents((prev) => {
             const next = [
@@ -245,15 +322,17 @@ export function AgentProvider({ children }: { children: ReactNode }) {
         console.error('Foundry failed. Switching to mock.', error);
         if (!popupShownRef.current && typeof window !== 'undefined') {
           popupShownRef.current = true;
-          window.alert(
-            'Erro ao ligar ao Foundry. O sistema mudou automaticamente para o modo Mock para continuar a funcionar.'
-          );
+          window.alert('Erro ao ligar ao Foundry. O sistema mudou automaticamente para o modo Mock para continuar a funcionar.');
         }
       });
 
       return {
         agentService: safeService,
         provider,
+        providerId,
+        setProviderId,
+        foundrySettings,
+        updateFoundrySettings,
         lastError,
         lastErrorAt,
         debugEvents,
@@ -264,29 +343,17 @@ export function AgentProvider({ children }: { children: ReactNode }) {
       return {
         agentService: mock,
         provider: 'Mock (Fallback)',
+        providerId,
+        setProviderId,
+        foundrySettings,
+        updateFoundrySettings,
         lastError: error instanceof Error ? error.message : String(error),
         lastErrorAt,
         debugEvents,
         clearDebugEvents: () => setDebugEvents([]),
       };
     }
-  }, [
-    configuredProvider,
-    foundryApiKey,
-    foundryApiVersion,
-    foundryEndpoint,
-    foundryProjectId,
-    foundryMode,
-    foundryAuthMode,
-    foundryApiKeyHeader,
-    foundryAgentUrlTemplate,
-    foundryAgentIds,
-    initInvalid,
-    provider,
-    lastError,
-    lastErrorAt,
-    debugEvents,
-  ]);
+  }, [providerId, provider, foundrySettings, initInvalid, lastError, lastErrorAt, debugEvents]);
 
   useEffect(() => {
     if (!initInvalid) return;
@@ -300,11 +367,7 @@ export function AgentProvider({ children }: { children: ReactNode }) {
     }
   }, [initInvalid]);
 
-  return (
-    <AgentContext.Provider value={value}>
-      {children}
-    </AgentContext.Provider>
-  );
+  return <AgentContext.Provider value={value}>{children}</AgentContext.Provider>;
 }
 
 export function useAgent() {
