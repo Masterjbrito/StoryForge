@@ -19,7 +19,11 @@ import {
   Lightbulb,
   Shield,
   Eye,
-  Download
+  Download,
+  Bug,
+  Trash2,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
@@ -52,7 +56,7 @@ export function ProjectBuilder({ onNavigate, projectData, onFinish }: ProjectBui
   const navigate = useNavigate();
   const location = useLocation();
   const effectiveProjectData = projectData ?? (location.state as any)?.projectData ?? null;
-  const { agentService, provider } = useAgent();
+  const { agentService, provider, debugEvents, clearDebugEvents } = useAgent();
   const { logAction } = useAudit();
 
   const navigateByView = (view: View) => {
@@ -85,6 +89,7 @@ export function ProjectBuilder({ onNavigate, projectData, onFinish }: ProjectBui
   const [userInput, setUserInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [showDebugPanel, setShowDebugPanel] = useState(false);
   const [isAgentBusy, setIsAgentBusy] = useState(false);
   const [selectedArtifact, setSelectedArtifact] = useState<any>(null);
   const [conversation, setConversation] = useState<any[]>([
@@ -432,6 +437,15 @@ export function ProjectBuilder({ onNavigate, projectData, onFinish }: ProjectBui
     }
   };
 
+  const formatDebugValue = (value: unknown) => {
+    try {
+      const raw = typeof value === 'string' ? value : JSON.stringify(value, null, 2);
+      return raw.length > 1200 ? `${raw.slice(0, 1200)}\n... [truncated]` : raw;
+    } catch {
+      return String(value);
+    }
+  };
+
   return (
     <div className="h-full flex flex-col bg-slate-50">
       {/* Header */}
@@ -459,6 +473,11 @@ export function ProjectBuilder({ onNavigate, projectData, onFinish }: ProjectBui
               <Sparkles className="w-3 h-3" />
               Provider: {provider}
             </Badge>
+            <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowDebugPanel((v) => !v)}>
+              <Bug className="w-4 h-4" />
+              Debug Foundry ({debugEvents.length})
+              {showDebugPanel ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </Button>
             <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowPreview(true)}>
               <Eye className="w-4 h-4" />
               Preview
@@ -489,6 +508,60 @@ export function ProjectBuilder({ onNavigate, projectData, onFinish }: ProjectBui
           </div>
           <Progress value={overallProgress} className="h-2" />
         </div>
+
+        {showDebugPanel && (
+          <Card className="mt-4 p-4 border border-slate-200 bg-slate-50">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="text-sm font-semibold text-slate-900">Debug Foundry (request/response)</p>
+                <p className="text-xs text-slate-600">Mostra o payload enviado para o Foundry e o retorno técnico.</p>
+              </div>
+              <Button variant="outline" size="sm" className="gap-2" onClick={clearDebugEvents}>
+                <Trash2 className="w-4 h-4" />
+                Limpar
+              </Button>
+            </div>
+
+            {debugEvents.length === 0 ? (
+              <p className="text-xs text-slate-500">Sem eventos ainda. Envie uma resposta para gerar chamadas aos agentes.</p>
+            ) : (
+              <ScrollArea className="h-56 pr-4">
+                <div className="space-y-2">
+                  {[...debugEvents].reverse().map((event) => (
+                    <details key={event.id} className="rounded-md border border-slate-200 bg-white p-2">
+                      <summary className="cursor-pointer text-xs text-slate-800 flex items-center gap-2">
+                        <Badge variant="outline" className={event.stage === 'error' ? 'border-red-300 text-red-700' : event.stage === 'response' ? 'border-emerald-300 text-emerald-700' : 'border-blue-300 text-blue-700'}>
+                          {event.stage.toUpperCase()}
+                        </Badge>
+                        <span className="font-medium">{event.agentType}</span>
+                        {event.status ? <span className="text-slate-500">HTTP {event.status}</span> : null}
+                        <span className="text-slate-500">{new Date(event.at).toLocaleTimeString('pt-PT', { hour12: false })}</span>
+                      </summary>
+                      <div className="mt-2 space-y-2">
+                        {event.url ? <p className="text-[11px] text-slate-600 break-all"><strong>URL:</strong> {event.url}</p> : null}
+                        {event.runId ? <p className="text-[11px] text-slate-600"><strong>run_id:</strong> {event.runId}</p> : null}
+                        {event.threadId ? <p className="text-[11px] text-slate-600"><strong>thread_id:</strong> {event.threadId}</p> : null}
+                        {event.message ? <p className="text-[11px] text-red-700 break-all"><strong>erro:</strong> {event.message}</p> : null}
+                        {event.requestBody !== undefined ? (
+                          <div>
+                            <p className="text-[11px] font-medium text-slate-700 mb-1">requestBody</p>
+                            <pre className="text-[10px] bg-slate-950 text-slate-100 rounded p-2 overflow-x-auto whitespace-pre-wrap">{formatDebugValue(event.requestBody)}</pre>
+                          </div>
+                        ) : null}
+                        {event.responseBody !== undefined ? (
+                          <div>
+                            <p className="text-[11px] font-medium text-slate-700 mb-1">responseBody</p>
+                            <pre className="text-[10px] bg-emerald-950 text-emerald-50 rounded p-2 overflow-x-auto whitespace-pre-wrap">{formatDebugValue(event.responseBody)}</pre>
+                          </div>
+                        ) : null}
+                      </div>
+                    </details>
+                  ))}
+                </div>
+              </ScrollArea>
+            )}
+          </Card>
+        )}
       </div>
 
       {/* 3-Column Layout */}

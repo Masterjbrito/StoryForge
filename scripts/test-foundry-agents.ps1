@@ -31,6 +31,56 @@ if (-not $baseUrl) {
   exit 1
 }
 
+# Use curl.exe for HTTP calls to avoid sporadic Invoke-WebRequest null-response issues on some PowerShell setups.
+function Invoke-CurlJson {
+  param(
+    [Parameter(Mandatory = $true)][string]$Method,
+    [Parameter(Mandatory = $true)][string]$Url,
+    [Parameter(Mandatory = $true)][hashtable]$Headers,
+    [string]$Body = ""
+  )
+
+  $tmpHeaders = [System.IO.Path]::GetTempFileName()
+  $tmpBody = [System.IO.Path]::GetTempFileName()
+  $tmpPayload = $null
+
+  try {
+    $args = @('-sS', '-D', $tmpHeaders, '-o', $tmpBody, '-X', $Method.ToUpperInvariant())
+    foreach ($k in $Headers.Keys) {
+      $args += @('-H', "$k`: $($Headers[$k])")
+    }
+
+    if ($Body) {
+      $tmpPayload = [System.IO.Path]::GetTempFileName()
+      [System.IO.File]::WriteAllText($tmpPayload, $Body, (New-Object System.Text.UTF8Encoding($false)))
+      $args += @('--data-binary', "@$tmpPayload")
+    }
+
+    $args += $Url
+    & curl.exe @args | Out-Null
+
+    $statusLine = (Get-Content $tmpHeaders | Where-Object { $_ -match '^HTTP/' } | Select-Object -Last 1)
+    $statusCode = 0
+    if ($statusLine -match 'HTTP/\S+\s+(\d{3})') {
+      $statusCode = [int]$Matches[1]
+    }
+
+    $content = ""
+    if (Test-Path $tmpBody) {
+      $content = Get-Content $tmpBody -Raw
+    }
+
+    return [PSCustomObject]@{
+      StatusCode = $statusCode
+      Content = $content
+    }
+  } finally {
+    if ($tmpPayload -and (Test-Path $tmpPayload)) { Remove-Item $tmpPayload -Force -ErrorAction SilentlyContinue }
+    if (Test-Path $tmpHeaders) { Remove-Item $tmpHeaders -Force -ErrorAction SilentlyContinue }
+    if (Test-Path $tmpBody) { Remove-Item $tmpBody -Force -ErrorAction SilentlyContinue }
+  }
+}
+
 # --- helpers ---
 
 function Convert-FromBase64Url {
@@ -89,7 +139,10 @@ $listUrl = "$($baseUrl.TrimEnd('/'))/assistants?api-version=$apiVersion"
 Write-Host "`n=== Pre-check: listing agents ===" -ForegroundColor Cyan
 Write-Host "  GET $listUrl" -ForegroundColor DarkGray
 try {
-  $listResp = Invoke-WebRequest -Method GET -Uri $listUrl -Headers $headers -TimeoutSec $TimeoutSec
+  $listResp = Invoke-CurlJson -Method GET -Url $listUrl -Headers $headers
+  if ($listResp.StatusCode -lt 200 -or $listResp.StatusCode -ge 300) {
+    throw "HTTP $($listResp.StatusCode) - $($listResp.Content)"
+  }
   Write-Host "  OK ($($listResp.StatusCode)) - Agents API reachable" -ForegroundColor Green
   $listJson = $listResp.Content | ConvertFrom-Json
   $agentList = if ($listJson.data) { $listJson.data } else { @() }
@@ -99,13 +152,6 @@ try {
   }
 } catch {
   $errMsg = $_.Exception.Message
-  if ($_.Exception.Response) {
-    $errMsg = "HTTP $($_.Exception.Response.StatusCode.value__)"
-    try {
-      $reader = New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())
-      $errMsg += " - $($reader.ReadToEnd().Substring(0, [Math]::Min(200, $reader.ReadToEnd().Length)))"
-    } catch { }
-  }
   Write-Host "  FAILED: $errMsg" -ForegroundColor Red
   Write-Host "  (This may mean the Agent Service is not enabled on this project)" -ForegroundColor Yellow
 }
@@ -155,8 +201,11 @@ foreach ($a in $agents) {
   Write-Host "`n  [$($a.type)] POST threads/runs with assistant_id=$id" -ForegroundColor DarkGray
 
   try {
-    $resp = Invoke-WebRequest -Method POST -Uri $threadsRunsUrl -Headers $headers -Body $body -TimeoutSec $TimeoutSec
+    $resp = Invoke-CurlJson -Method POST -Url $threadsRunsUrl -Headers $headers -Body $body
     $statusCode = $resp.StatusCode
+    if ($statusCode -lt 200 -or $statusCode -ge 300) {
+      throw "HTTP $statusCode - $($resp.Content)"
+    }
     $respJson = $resp.Content | ConvertFrom-Json
     $runStatus = $respJson.status
     $threadId = $respJson.thread_id
@@ -172,15 +221,10 @@ foreach ($a in $agents) {
   } catch {
     $status = 'ERR'
     $note = $_.Exception.Message
-    if ($_.Exception.Response) {
-      $httpCode = $_.Exception.Response.StatusCode.value__
-      $status = "ERR($httpCode)"
-      try {
-        $reader = New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())
-        $txt = $reader.ReadToEnd()
-        if ($txt.Length -gt 250) { $txt = $txt.Substring(0, 250) + '...' }
-        $note = $txt
-      } catch {}
+    if ($note -match '^HTTP\s+(\d{3})\s+-\s+(.*)$') {
+      $status = "ERR($($Matches[1]))"
+      $note = $Matches[2]
+      if ($note.Length -gt 250) { $note = $note.Substring(0, 250) + '...' }
     }
     $results += [PSCustomObject]@{ Agent = $a.type; Id = $id; Status = $status; Note = $note }
     Write-Host "    $status :: $note" -ForegroundColor Red

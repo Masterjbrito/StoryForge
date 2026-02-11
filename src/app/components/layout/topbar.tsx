@@ -13,6 +13,7 @@ import {
 import { ScrollArea } from '../ui/scroll-area';
 import { useState } from 'react';
 import { useNotifications } from '@/contexts/NotificationContext';
+import { useAgent } from '@/contexts/AgentContext';
 
 type View =
   | 'dashboard'
@@ -49,6 +50,13 @@ export function Topbar({ onNavigate }: TopbarProps) {
         deleteNotification: (_id: number) => {},
         clearAll: () => {},
       };
+    }
+  })();
+  const { provider, lastError, lastErrorAt } = (() => {
+    try {
+      return useAgent();
+    } catch {
+      return { provider: 'Mock (Development)', lastError: null, lastErrorAt: null };
     }
   })();
 
@@ -120,6 +128,13 @@ export function Topbar({ onNavigate }: TopbarProps) {
     }
   };
 
+  const isFoundryActive = provider === 'Microsoft Foundry';
+  const hasAgentError = !!lastError || provider === 'Mock (Fallback)';
+  const agentErrorText = lastError ?? 'Sem detalhes tecnicos adicionais.';
+  const agentErrorTime = lastErrorAt
+    ? new Date(lastErrorAt).toLocaleTimeString('pt-PT', { hour12: false })
+    : null;
+
   return (
     <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6">
       <div className="flex items-center gap-4 flex-1">
@@ -138,6 +153,25 @@ export function Topbar({ onNavigate }: TopbarProps) {
       </div>
 
       <div className="flex items-center gap-3">
+        <div className="hidden xl:flex items-center gap-2">
+          <Badge
+            variant="outline"
+            className={isFoundryActive ? 'border-emerald-300 bg-emerald-50 text-emerald-700' : 'border-amber-300 bg-amber-50 text-amber-700'}
+            title={hasAgentError ? `Erro: ${agentErrorText}` : 'Conectado ao provider de agentes'}
+          >
+            {isFoundryActive ? 'Foundry Online' : 'Mock Fallback'}
+          </Badge>
+          {hasAgentError && (
+            <Badge
+              variant="outline"
+              className="max-w-[360px] border-red-300 bg-red-50 text-red-700 truncate"
+              title={agentErrorTime ? `${agentErrorTime} - ${agentErrorText}` : agentErrorText}
+            >
+              {agentErrorTime ? `Erro ${agentErrorTime}: ${agentErrorText}` : `Erro: ${agentErrorText}`}
+            </Badge>
+          )}
+        </div>
+
         <Button
           onClick={goNewProject}
           className="bg-slate-900 hover:bg-slate-800 text-white gap-2"

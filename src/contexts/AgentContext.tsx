@@ -8,6 +8,7 @@ import type {
   ExportResult,
   VersionDiffResult,
   AuditLoggingResult,
+  AgentType,
 } from '@/types/agents';
 import type { NewProjectFormData, Epic, ConversationMessage } from '@/types/domain';
 import { MockAgentService } from '@/services/MockAgentService';
@@ -16,6 +17,25 @@ import { FoundryAgentService } from '@/services/FoundryAgentService';
 interface AgentContextValue {
   agentService: IAgentService;
   provider: string;
+  lastError: string | null;
+  lastErrorAt: Date | null;
+  debugEvents: Array<{
+    id: number;
+    at: Date;
+    provider: 'foundry' | 'mock';
+    stage: 'request' | 'response' | 'error';
+    agentType: AgentType;
+    url?: string;
+    method?: string;
+    requestBody?: unknown;
+    responseBody?: unknown;
+    status?: number;
+    threadId?: string;
+    runId?: string;
+    message?: string;
+    durationMs?: number;
+  }>;
+  clearDebugEvents: () => void;
 }
 
 const AgentContext = createContext<AgentContextValue | null>(null);
@@ -160,17 +180,34 @@ export function AgentProvider({ children }: { children: ReactNode }) {
   const [provider, setProvider] = useState(
     configuredProvider === 'foundry' ? 'Microsoft Foundry' : 'Mock (Development)'
   );
+  const [lastError, setLastError] = useState<string | null>(null);
+  const [lastErrorAt, setLastErrorAt] = useState<Date | null>(null);
+  const [debugEvents, setDebugEvents] = useState<AgentContextValue['debugEvents']>([]);
   const popupShownRef = useRef(false);
 
   const value = useMemo<AgentContextValue>(() => {
     const mock = new MockAgentService();
 
     if (configuredProvider !== 'foundry') {
-      return { agentService: mock, provider };
+      return {
+        agentService: mock,
+        provider,
+        lastError: null,
+        lastErrorAt: null,
+        debugEvents,
+        clearDebugEvents: () => setDebugEvents([]),
+      };
     }
 
     if (initInvalid) {
-      return { agentService: mock, provider: 'Mock (Fallback)' };
+      return {
+        agentService: mock,
+        provider: 'Mock (Fallback)',
+        lastError: 'Configuracao Foundry invalida (endpoint/api key em falta).',
+        lastErrorAt,
+        debugEvents,
+        clearDebugEvents: () => setDebugEvents([]),
+      };
     }
 
     try {
@@ -184,10 +221,27 @@ export function AgentProvider({ children }: { children: ReactNode }) {
         apiKeyHeader: foundryApiKeyHeader,
         agentUrlTemplate: foundryAgentUrlTemplate,
         agentIds: foundryAgentIds,
+        onDebug: (event) => {
+          setDebugEvents((prev) => {
+            const next = [
+              ...prev,
+              {
+                id: Date.now() + Math.floor(Math.random() * 1000),
+                at: new Date(),
+                provider: 'foundry' as const,
+                ...event,
+              },
+            ];
+            return next.slice(-80);
+          });
+        },
       });
 
       const safeService = new FallbackAgentService(foundry, mock, (error) => {
         setProvider('Mock (Fallback)');
+        const message = error instanceof Error ? error.message : String(error);
+        setLastError(message);
+        setLastErrorAt(new Date());
         console.error('Foundry failed. Switching to mock.', error);
         if (!popupShownRef.current && typeof window !== 'undefined') {
           popupShownRef.current = true;
@@ -197,10 +251,24 @@ export function AgentProvider({ children }: { children: ReactNode }) {
         }
       });
 
-      return { agentService: safeService, provider };
+      return {
+        agentService: safeService,
+        provider,
+        lastError,
+        lastErrorAt,
+        debugEvents,
+        clearDebugEvents: () => setDebugEvents([]),
+      };
     } catch (error) {
       console.error('Foundry initialization failed. Using mock.', error);
-      return { agentService: mock, provider: 'Mock (Fallback)' };
+      return {
+        agentService: mock,
+        provider: 'Mock (Fallback)',
+        lastError: error instanceof Error ? error.message : String(error),
+        lastErrorAt,
+        debugEvents,
+        clearDebugEvents: () => setDebugEvents([]),
+      };
     }
   }, [
     configuredProvider,
@@ -215,6 +283,9 @@ export function AgentProvider({ children }: { children: ReactNode }) {
     foundryAgentIds,
     initInvalid,
     provider,
+    lastError,
+    lastErrorAt,
+    debugEvents,
   ]);
 
   useEffect(() => {
@@ -222,6 +293,8 @@ export function AgentProvider({ children }: { children: ReactNode }) {
     if (popupShownRef.current) return;
     popupShownRef.current = true;
     setProvider('Mock (Fallback)');
+    setLastError('Configuracao Foundry invalida (endpoint/api key em falta).');
+    setLastErrorAt(new Date());
     if (typeof window !== 'undefined') {
       window.alert('Configuracao Foundry invalida. O sistema vai usar Mock.');
     }

@@ -73,6 +73,20 @@ function Find-AgentIdByKeywords($agents, $keywords) {
   return ""
 }
 
+function Read-EnvFileMap {
+  param([string]$Path)
+  $map = @{}
+  if (-not (Test-Path $Path)) { return $map }
+  Get-Content $Path | ForEach-Object {
+    if ($_ -match '^\s*#' -or $_ -notmatch '=') { return }
+    $parts = $_ -split '=', 2
+    $k = $parts[0].Trim()
+    $v = $parts[1].Trim()
+    $map[$k] = $v
+  }
+  return $map
+}
+
 Ensure-AzCli
 Ensure-AzLogin
 
@@ -96,7 +110,7 @@ if (-not $ProjectId) {
   }
 }
 
-$token = Invoke-Az account get-access-token --resource "https://ai.azure.com" --query accessToken -o tsv
+$token = Invoke-Az account get-access-token --resource "https://ai.azure.com" --query accessToken --output tsv
 if (-not $token) {
   throw "Failed to acquire Azure token for https://ai.azure.com"
 }
@@ -130,12 +144,20 @@ $map = [ordered]@{
 }
 
 $resolved = [ordered]@{}
+$envPath = Join-Path (Get-Location) ".env.local"
+$existingEnv = Read-EnvFileMap -Path $envPath
 foreach ($key in $map.Keys) {
-  $resolved[$key] = if ($agents.Count -gt 0) { Find-AgentIdByKeywords $agents $map[$key] } else { "" }
+  $auto = if ($agents.Count -gt 0) { Find-AgentIdByKeywords $agents $map[$key] } else { "" }
+  if ($auto) {
+    $resolved[$key] = $auto
+  } elseif ($existingEnv.ContainsKey($key) -and $existingEnv[$key]) {
+    $resolved[$key] = $existingEnv[$key]
+  } else {
+    $resolved[$key] = ""
+  }
 }
 
-$envPath = Join-Path (Get-Location) ".env.local"
-# No longer setting VITE_FOUNDRY_AGENT_URL_TEMPLATE — the service defaults
+# No longer setting VITE_FOUNDRY_AGENT_URL_TEMPLATE - the service defaults
 # to the documented POST {endpoint}/threads/runs?api-version=v1 endpoint.
 
 $lines = @()
@@ -198,3 +220,4 @@ foreach ($k in $resolved.Keys) {
 }
 Write-Host ""
 Write-Host "Note: token in VITE_FOUNDRY_API_KEY expires. Re-run this script when needed." -ForegroundColor Yellow
+

@@ -22,6 +22,19 @@ interface FoundryConfig {
   apiKeyHeader?: string;
   agentUrlTemplate?: string;
   agentIds?: Partial<Record<AgentType, string>>;
+  onDebug?: (event: {
+    stage: 'request' | 'response' | 'error';
+    agentType: AgentType;
+    url?: string;
+    method?: string;
+    requestBody?: unknown;
+    responseBody?: unknown;
+    status?: number;
+    threadId?: string;
+    runId?: string;
+    message?: string;
+    durationMs?: number;
+  }) => void;
 }
 
 type FoundryPayload = Record<string, unknown>;
@@ -37,6 +50,7 @@ export class FoundryAgentService implements IAgentService {
   private readonly apiKeyHeader: string;
   private readonly agentUrlTemplate?: string;
   private readonly agentIds: Partial<Record<AgentType, string>>;
+  private readonly onDebug?: FoundryConfig['onDebug'];
 
   constructor(config: FoundryConfig) {
     this.endpoint = config.endpoint;
@@ -49,6 +63,7 @@ export class FoundryAgentService implements IAgentService {
     this.apiKeyHeader = config.apiKeyHeader ?? 'api-key';
     this.agentUrlTemplate = config.agentUrlTemplate;
     this.agentIds = config.agentIds ?? {};
+    this.onDebug = config.onDebug;
 
     if (!this.endpoint || !this.apiKey) {
       throw new Error('Foundry configuration missing (endpoint/api key).');
@@ -192,12 +207,43 @@ export class FoundryAgentService implements IAgentService {
 
     switch (agentType) {
       case 'questionnaire-discovery': {
+        const nextQuestion =
+          (typeof data.nextQuestion === 'string' && data.nextQuestion.trim()) ||
+          (typeof data.question === 'string' && data.question.trim()) ||
+          (typeof data.content === 'string' && data.content.trim()) ||
+          (typeof text === 'string' && text.trim()) ||
+          '';
+
+        const expectedFormat =
+          typeof data.expectedAnswerFormat === 'string' && data.expectedAnswerFormat.trim()
+            ? data.expectedAnswerFormat.trim()
+            : undefined;
+        const whyThisQuestion =
+          typeof data.whyThisQuestion === 'string' && data.whyThisQuestion.trim()
+            ? data.whyThisQuestion.trim()
+            : undefined;
+
+        const clarificationQuestion =
+          'Para eu gerar requisitos corretos, pode esclarecer melhor este ponto com objetivo, regras e restricoes?';
+
+        const content = nextQuestion || clarificationQuestion;
+        const contentWithHints = [
+          content,
+          expectedFormat ? `Formato esperado: ${expectedFormat}.` : '',
+          whyThisQuestion ? `Motivo: ${whyThisQuestion}` : '',
+        ]
+          .filter(Boolean)
+          .join('\n\n');
+
         const mapped: ConversationMessage = {
           id: Date.now(),
           role: 'assistant',
-          content: (typeof data.content === 'string' && data.content) || text || 'Pode detalhar melhor este ponto funcional?',
+          content: contentWithHints,
           timestamp: new Date(),
-          category: typeof data.category === 'string' ? data.category : undefined,
+          category:
+            (typeof data.questionCategory === 'string' && data.questionCategory) ||
+            (typeof data.category === 'string' && data.category) ||
+            undefined,
         };
         return mapped as T;
       }
@@ -365,6 +411,14 @@ export class FoundryAgentService implements IAgentService {
       for (const url of urls) {
         for (const body of bodies) {
           try {
+            this.onDebug?.({
+              stage: 'request',
+              agentType,
+              method: 'POST',
+              url,
+              requestBody: body,
+            });
+
             const response = await fetch(url, {
               method: 'POST',
               headers: this.getHeaders(),
@@ -374,6 +428,14 @@ export class FoundryAgentService implements IAgentService {
 
             if (!response.ok) {
               const bodyText = await response.text().catch(() => '');
+              this.onDebug?.({
+                stage: 'error',
+                agentType,
+                method: 'POST',
+                url,
+                status: response.status,
+                message: bodyText.slice(0, 500),
+              });
               errors.push(`[${response.status}] ${url} :: ${bodyText.slice(0, 180)}`);
               continue;
             }
@@ -402,8 +464,29 @@ export class FoundryAgentService implements IAgentService {
                   responseData = JSON.parse(responseData);
                 } catch { /* keep as string */ }
               }
+
+              this.onDebug?.({
+                stage: 'response',
+                agentType,
+                method: 'POST',
+                url,
+                status: 200,
+                runId,
+                threadId,
+                responseBody: responseData,
+                durationMs: Date.now() - startedAt,
+              });
             } else {
               responseData = json;
+              this.onDebug?.({
+                stage: 'response',
+                agentType,
+                method: 'POST',
+                url,
+                status: 200,
+                responseBody: responseData,
+                durationMs: Date.now() - startedAt,
+              });
             }
 
             const processingTime = Date.now() - startedAt;
@@ -418,6 +501,13 @@ export class FoundryAgentService implements IAgentService {
             };
           } catch (error) {
             const msg = error instanceof Error ? error.message : String(error);
+            this.onDebug?.({
+              stage: 'error',
+              agentType,
+              method: 'POST',
+              url,
+              message: msg,
+            });
             errors.push(`[network] ${url} :: ${msg}`);
           }
         }
