@@ -135,7 +135,7 @@ export function ProjectBuilder({ onNavigate, projectData, onFinish }: ProjectBui
     {
       id: 'personas',
       title: 'Personas e Utilizadores',
-      icon: 'ðŸ‘¥',
+      icon: '👥',
       total: 6,
       questions: [
         'Quem são os utilizadores principais deste sistema?',
@@ -149,7 +149,7 @@ export function ProjectBuilder({ onNavigate, projectData, onFinish }: ProjectBui
     {
       id: 'journeys',
       title: 'Jornadas de Utilizador',
-      icon: 'ðŸ—ºï¸',
+      icon: '🗺️',
       total: 5,
       questions: [
         'Descreva o fluxo principal (happy path) da aplicação',
@@ -162,7 +162,7 @@ export function ProjectBuilder({ onNavigate, projectData, onFinish }: ProjectBui
     {
       id: 'business-rules',
       title: 'Regras de Negócio',
-      icon: 'âš–ï¸',
+      icon: '⚖️',
       total: 5,
       questions: [
         'Quais são as regras de validação de dados críticas?',
@@ -175,7 +175,7 @@ export function ProjectBuilder({ onNavigate, projectData, onFinish }: ProjectBui
     {
       id: 'exceptions',
       title: 'Exceções e Casos Limite',
-      icon: 'âš ï¸',
+      icon: '⚠️',
       total: 4,
       questions: [
         'O que acontece quando dados estão indisponíveis?',
@@ -187,7 +187,7 @@ export function ProjectBuilder({ onNavigate, projectData, onFinish }: ProjectBui
     {
       id: 'compliance',
       title: 'Compliance e Segurança',
-      icon: 'ðŸ›¡ï¸',
+      icon: '🛡️',
       total: 4,
       questions: [
         'Que requisitos PSD2 devem ser cumpridos?',
@@ -199,7 +199,7 @@ export function ProjectBuilder({ onNavigate, projectData, onFinish }: ProjectBui
     {
       id: 'testing',
       title: 'Testes e Validação',
-      icon: 'ðŸ§ª',
+      icon: '🧪',
       total: 4,
       questions: [
         'Que cenários de teste são prioritários?',
